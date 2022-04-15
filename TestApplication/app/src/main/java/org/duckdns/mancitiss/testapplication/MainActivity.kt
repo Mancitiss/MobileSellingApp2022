@@ -4,6 +4,7 @@ import android.app.ActionBar
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -14,6 +15,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.marginTop
 import androidx.core.widget.TextViewCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.resources.TextAppearance
 
 
@@ -27,10 +29,7 @@ class MainActivity : AppCompatActivity() {
         Thread.sleep(3000)
         setContentView(R.layout.activity_main)
         //items.add(R.id.item_1)
-        addItem("Gà nướng(?)", "Ngon nhứt nha ngon nhứt nha ngon nhứt nhaa", 0, BitmapFactory.decodeResource(resources, R.drawable.thanksgiving_chicken_96))
-        addItem("Khoai tây chiênnn", "Ngon hơn khi dùng lạnh!", 0, BitmapFactory.decodeResource(resources, R.drawable.mcdonald_s_french_fries_96))
-        addItem("Bắp nổ", "Dùng để ăn trong khi chờ đến giờ vào rạp", 0, BitmapFactory.decodeResource(resources, R.drawable.popcorn_96))
-        addItem("Boba Bola", "Bepis", 0, BitmapFactory.decodeResource(resources, R.drawable.cola_96))
+        reset()
     }
     fun addText(text: String?){
         val constraintLayout = findViewById<ConstraintLayout>(R.id.ScrollMenuLayout)
@@ -207,5 +206,25 @@ class MainActivity : AppCompatActivity() {
             resources.getDimension(R.dimen.item_description_margin_end).toInt()
         )
         constraintSet.applyTo(dynamicLayout)
+    }
+
+    fun reset(){
+        items = mutableListOf<Int>()
+        addItem("Gà nướng(?)", "Ngon nhứt nha ngon nhứt nha ngon nhứt nhaa", 0, BitmapFactory.decodeResource(resources, R.drawable.thanksgiving_chicken_96))
+        addItem("Khoai tây chiênnn", "Ngon hơn khi dùng lạnh!", 0, BitmapFactory.decodeResource(resources, R.drawable.mcdonald_s_french_fries_96))
+        addItem("Bắp nổ", "Dùng để ăn trong khi chờ đến giờ vào rạp", 0, BitmapFactory.decodeResource(resources, R.drawable.popcorn_96))
+        addItem("Boba Bola", "Bepis", 0, BitmapFactory.decodeResource(resources, R.drawable.cola_96))
+    }
+
+    fun goTo(view: View) {
+        if ((view as TextView).text == "Main"){
+            findViewById<DrawerLayout>(R.id.main_drawer_layout).closeDrawers()
+            setContentView(R.layout.activity_main)
+            reset()
+        }
+    }
+
+    fun openMenu(view: View) {
+        findViewById<DrawerLayout>(R.id.main_drawer_layout).openDrawer(Gravity.LEFT)
     }
 }
