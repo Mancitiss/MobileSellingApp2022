@@ -265,6 +265,8 @@ class MainActivity : AppCompatActivity() {
         thread{
             clientLoop()
         }
+
+        // from now on there will be another thread runs asynchronously with
         var token = pref.getString("token", null)
         if (token == "" || token == null) {
             // request server for a new token
@@ -308,10 +310,11 @@ class MainActivity : AppCompatActivity() {
             var b = -1
             do{
                 try{
+                    // read data from s and process here, in this try block only, do not go outside
 
                 }
                 catch (e: Exception){
-
+                    print(e.message)
                 }
                 finally {
                     b = s.read()
