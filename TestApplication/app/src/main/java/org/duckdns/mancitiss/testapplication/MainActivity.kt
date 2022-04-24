@@ -266,7 +266,8 @@ class MainActivity : AppCompatActivity() {
             clientLoop()
         }
 
-        // from now on there will be another thread runs asynchronously with
+        // from now on there will be another thread (the above thread) that runs synchronously with
+        // this main thread
         var token = pref.getString("token", null)
         if (token == "" || token == null) {
             // request server for a new token
