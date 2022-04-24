@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Test Application</string>
+    <string name="IB2_des">Test</string>
+    <string name="navigation_label_main">Main</string>
+</resources>
