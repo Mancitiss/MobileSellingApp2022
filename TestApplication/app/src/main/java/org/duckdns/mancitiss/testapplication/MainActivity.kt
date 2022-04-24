@@ -1,6 +1,8 @@
 package org.duckdns.mancitiss.testapplication
 
 import android.app.ActionBar
+import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
@@ -13,20 +15,36 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.core.view.marginTop
 import androidx.core.widget.TextViewCompat
 import androidx.drawerlayout.widget.DrawerLayout
-import com.google.android.material.resources.TextAppearance
+import java.io.DataInputStream
+import java.io.DataOutputStream
+import java.io.PushbackInputStream
+import java.nio.charset.StandardCharsets
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLSocket
+import javax.net.ssl.SSLSocketFactory
+import kotlin.concurrent.thread
 
 
 class MainActivity : AppCompatActivity() {
-
     var items = mutableListOf<Int>()
+    val tools = Tools()
+
+    var executor: ExecutorService = Executors.newCachedThreadPool()
+    var exec: ScheduledThreadPoolExecutor = ScheduledThreadPoolExecutor(3)
+
+    var user: User? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.loading)
-        Thread.sleep(3000)
+        thread{
+            connectToServer()
+        }
         setContentView(R.layout.activity_main)
         //items.add(R.id.item_1)
         reset()
@@ -226,5 +244,83 @@ class MainActivity : AppCompatActivity() {
 
     fun openMenu(view: View) {
         findViewById<DrawerLayout>(R.id.main_drawer_layout).openDrawer(Gravity.LEFT)
+    }
+
+    private fun connectToServer(){
+
+        val pref = getPreferences(
+            Context.MODE_PRIVATE)
+        val ssf: SSLSocketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
+        val ss: SSLSocket = ssf.createSocket("mancitiss.duckdns.org", 11111) as SSLSocket
+        //print("Successfully Connected!")
+        val DOS = DataOutputStream(ss.outputStream)
+        val DIS = DataInputStream(ss.inputStream)
+        val user = User()
+        user.DIS = DIS
+        user.DOS = DOS
+        user.username = pref.getString("username", null)
+        user.phone = pref.getString("phone", null)
+        user.email = pref.getString("email", null)
+        this.user = user
+        thread{
+            clientLoop()
+        }
+        var token = pref.getString("token", null)
+        if (token == "" || token == null) {
+            // request server for a new token
+            DOS.write("0001".toByteArray(StandardCharsets.UTF_16LE))
+            var data = tools.receive_Unicode_Automatically(DIS)
+            //after trigger this login programmatically set the token value
+            val editor: SharedPreferences.Editor = pref.edit()
+            editor.putString("token", "True")
+            editor.apply()
+        } else {
+            //get existing token from preferences
+        }
+    }
+
+    private fun clientLoop(){
+        try{
+            val user = this.user
+            if (user!=null){
+                val localDIS = user.DIS
+                if (localDIS != null){
+                    val s: PushbackInputStream = PushbackInputStream(localDIS)
+                    var b = s.read()
+                    if (b == -1){
+                        Thread.sleep(100)
+                    }
+                    else {
+                        s.unread(b)
+                        receiveData(s)
+                    }
+                }
+            }
+            exec.schedule( Runnable(){ @Override fun run(){ clientLoop(); }}, 1, TimeUnit.SECONDS)
+        }
+        catch (e: Exception){
+
+        }
+    }
+
+    private fun receiveData(s: PushbackInputStream){
+        try{
+            var b = -1
+            do{
+                try{
+
+                }
+                catch (e: Exception){
+
+                }
+                finally {
+                    b = s.read()
+                    s.unread(b)
+                }
+            } while (b != -1)
+        }
+        catch (e: Exception){
+            print(e.message)
+        }
     }
 }
