@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.view.allViews
 import androidx.core.widget.TextViewCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import java.io.DataInputStream
@@ -42,9 +43,13 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.loading)
+        /*
         thread{
             connectToServer()
         }
+         */
+        // from now on there will be another thread (the above thread) that runs synchronously with
+        // this main thread
         setContentView(R.layout.activity_main)
         //items.add(R.id.item_1)
         reset()
@@ -226,7 +231,25 @@ class MainActivity : AppCompatActivity() {
         constraintSet.applyTo(dynamicLayout)
     }
 
+    fun remove(view: View){ // for debug only
+        val constraintLayout = findViewById<ConstraintLayout>(R.id.ScrollMenuLayout)
+        val count = constraintLayout.getChildCount() - 1
+        if (count > 0) {constraintLayout.removeViews(1, count)}
+
+        items = mutableListOf<Int>()
+    }
+
+    fun add(view: View){ // for debug only
+        addItem("Gà nướng(?)", "Ngon nhứt nha ngon nhứt nha ngon nhứt nhaa", 0, BitmapFactory.decodeResource(resources, R.drawable.thanksgiving_chicken_96))
+        addItem("Khoai tây chiênnn", "Ngon hơn khi dùng lạnh!", 0, BitmapFactory.decodeResource(resources, R.drawable.mcdonald_s_french_fries_96))
+        addItem("Bắp nổ", "Dùng để ăn trong khi chờ đến giờ vào rạp", 0, BitmapFactory.decodeResource(resources, R.drawable.popcorn_96))
+        addItem("Boba Bola", "Bepis", 0, BitmapFactory.decodeResource(resources, R.drawable.cola_96))
+    }
+
     fun reset(){
+        val constraintLayout = findViewById<ConstraintLayout>(R.id.ScrollMenuLayout)
+        val count = constraintLayout.getChildCount() - 1
+        if (count > 0) {constraintLayout.removeViews(1, count)}
         items = mutableListOf<Int>()
         addItem("Gà nướng(?)", "Ngon nhứt nha ngon nhứt nha ngon nhứt nhaa", 0, BitmapFactory.decodeResource(resources, R.drawable.thanksgiving_chicken_96))
         addItem("Khoai tây chiênnn", "Ngon hơn khi dùng lạnh!", 0, BitmapFactory.decodeResource(resources, R.drawable.mcdonald_s_french_fries_96))
@@ -265,9 +288,6 @@ class MainActivity : AppCompatActivity() {
         thread{
             clientLoop()
         }
-
-        // from now on there will be another thread (the above thread) that runs synchronously with
-        // this main thread
         var token = pref.getString("token", null)
         if (token == "" || token == null) {
             // request server for a new token

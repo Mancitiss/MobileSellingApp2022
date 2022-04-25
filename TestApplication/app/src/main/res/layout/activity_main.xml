@@ -41,16 +41,24 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/notification_50" />
+        <!-- for debug only, the below line of code will make the above button remove all the
+        products from the main menu screen after adding it below the contentDescription line
+            android:onClick="remove"
+            -->
 
         <ImageButton
             android:id="@+id/CartButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="#0000"
-            android:contentDescription="@string/IB2_des"
+            android:contentDescription="Test"
             app:layout_constraintEnd_toStartOf="@+id/NotificationButton"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/shopping_cart_50" />
+        <!-- for debug only, the below line of code  will make the above button add products to
+        the main menu screen after adding it below the contentDescription line
+            android:onClick="add"
+            -->
 
         <ScrollView
             android:layout_width="match_parent"
