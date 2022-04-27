@@ -27,18 +27,27 @@ public class Receive_from_socket_not_logged_in implements Runnable {
         return base64Encoder.encodeToString(randomBytes);
     }
 
-    private void Send_new_token(DataOutputStream DOS) {
+    private String Send_new_token(DataOutputStream DOS) {
         // create new token that is not in database
         String new_token = generateNewToken();
         while (true) {
-            try {
-                PreparedStatement stmt = ServerMain.sql.prepareStatement("SELECT * FROM tokens WHERE token = ?");
+            try (PreparedStatement stmt = ServerMain.sql.prepareStatement("SELECT * FROM TOKEN WHERE token = ?");)
+            {
                 stmt.setString(1, new_token);
-                ResultSet rs = stmt.executeQuery();
-                if (!rs.next()) {
-                    break;
+                try(ResultSet rs = stmt.executeQuery();)
+                {
+                    if (!rs.next()) {
+                        try(PreparedStatement stmt2 = ServerMain.sql.prepareStatement("INSERT INTO TOKEN (token, username, expirationDate) VALUES (?, NULL, ?)");)
+                        {
+                            stmt2.setString(1, new_token);
+                            stmt2.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis() + ServerMain.token_expiration_time));
+                            stmt2.executeUpdate();
+                            break;
+                        }
+                    }
                 }
-            } catch (Exception e) {
+            } 
+            catch (Exception e) {
                 e.printStackTrace();
             }
             new_token = generateNewToken();
@@ -46,9 +55,11 @@ public class Receive_from_socket_not_logged_in implements Runnable {
         try {
             DOS.write(Tools.combine("0002".getBytes(StandardCharsets.UTF_16LE), new_token.getBytes(StandardCharsets.US_ASCII)));
             DOS.flush();
+            System.out.println("Sent 0002 to client: "+ new_token + " " + new_token.length());
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return new_token;
     }
 
     @Override
@@ -62,12 +73,14 @@ public class Receive_from_socket_not_logged_in implements Runnable {
             //
             String data = Tools.receive_unicode(DIS, 8);
             //
-            if (data != null && !data.isEmpty()) {
+            if (data != null && !data.isBlank()) {
                 String instruction = data;
+                System.out.println("Received instruction: " + instruction);
                 
                 if (instruction.equals("0012")) {
                     Thread.sleep(100);
                     data = Tools.receive_ASCII(DIS, 32);
+                    System.out.println(data);
                     try{
                         DIS.close();
                     } catch (Exception e) {}
@@ -121,12 +134,14 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                 else if (instruction.equals("0001")) {
                     Thread.sleep(100);
                     data = Tools.receive_ASCII(DIS, 32);
-                    try (PreparedStatement cmd = ServerMain.sql.prepareStatement("select top 1 token, username from account where token=?");){
-                        cmd.setNString(1, data);
+                    System.out.println(data);
+                    try (PreparedStatement cmd = ServerMain.sql.prepareStatement("select top 1 token, username from TOKEN where token=?");){
+                        cmd.setString(1, data);
                         try (ResultSet rs = cmd.executeQuery()){
                             if (rs.next()){
                                 // token is valid, send username to client
                                 DOS.write(("0001").getBytes(StandardCharsets.UTF_16LE));
+                                System.out.println("sent 0001 to client");
                                 // after finishing all the initializing, put the client into the session
                                 Client client = new Client();
                                 client.client = this.client;
@@ -137,7 +152,14 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                 ServerMain.sessions.put(data, client);
                             } 
                             else {
-                                Send_new_token(DOS);
+                                String token = Send_new_token(DOS);
+                                Client client = new Client();
+                                client.client = this.client;
+                                client.stream = DOS;
+                                client.DIS = DIS;
+                                client.is_locked.set(0);
+                                client.token = token;
+                                ServerMain.sessions.put(token, client);
                             }
                         }
                     } catch(Exception e){
@@ -157,7 +179,14 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                     }
                 } else if (instruction.equals("0002")){
                     try{
-                        Send_new_token(DOS);
+                        String token = Send_new_token(DOS);
+                        Client client = new Client();
+                        client.client = this.client;
+                        client.stream = DOS;
+                        client.DIS = DIS;
+                        client.is_locked.set(0);
+                        client.token = token;
+                        ServerMain.sessions.put(token, client);
                     } catch (Exception e){
                         e.printStackTrace();
                     } finally {

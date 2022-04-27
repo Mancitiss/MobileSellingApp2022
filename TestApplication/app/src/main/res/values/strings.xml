@@ -3,4 +3,5 @@
     <string name="IB2_des">Test</string>
     <string name="navigation_label_main">Main</string>
     <string name="token">token</string>
+    <string name="serverAddress">mancitiss.duckdns.org</string>
 </resources>

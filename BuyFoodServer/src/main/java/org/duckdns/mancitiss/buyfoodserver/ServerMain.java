@@ -6,10 +6,13 @@ import java.sql.DriverManager;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
+
+import com.google.gson.Gson;
 
 public class ServerMain {
     // main 
@@ -17,8 +20,13 @@ public class ServerMain {
     static String cnurl;
     
     static ExecutorService executor = Executors.newCachedThreadPool();
+    static AtomicReference<Integer> isSqlWriting = new AtomicReference<Integer>(0);
+
+    public static Gson gson = new Gson();
 
     static ConcurrentHashMap<String, Client> sessions = new ConcurrentHashMap<String, Client>();
+    public static final long token_expiration_time = 1000 * 60 * 60 * 24 * 1; // 1 day
+    public static final int loadCount = 4;
     public static void main(String[] args) {
         try {
             String connectionUrl = "jdbc:sqlserver://" + System.getenv("DBServer") + ";"
@@ -49,7 +57,7 @@ public class ServerMain {
             try {
                 while (true) {
                     SSLSocket client = (SSLSocket) ss.accept();
-                    
+                    System.out.println("Connected");
                     try {
                         // translate below line of code from C#
                         // ThreadPool.QueueUserWorkItem(Receive_from_socket_not_logged_in, client);

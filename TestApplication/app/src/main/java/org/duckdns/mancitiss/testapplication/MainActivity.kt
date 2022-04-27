@@ -6,6 +6,7 @@ import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -15,44 +16,47 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.core.view.allViews
 import androidx.core.widget.TextViewCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import com.google.gson.Gson
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.PushbackInputStream
+import java.math.BigDecimal
 import java.nio.charset.StandardCharsets
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledThreadPoolExecutor
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
+import java.util.concurrent.atomic.AtomicReference
 import javax.net.ssl.SSLSocket
 import javax.net.ssl.SSLSocketFactory
 import kotlin.concurrent.thread
 
 
 class MainActivity : AppCompatActivity() {
-    var items = mutableListOf<Int>()
+    var pref: SharedPreferences? = null
     val tools = Tools()
+    val ssf: SSLSocketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
+    val gson: Gson = Gson()
 
+    var knownProducts = ConcurrentHashMap<String, Product>()
+    var items = mutableListOf<Int>()
     var executor: ExecutorService = Executors.newCachedThreadPool()
     var exec: ScheduledThreadPoolExecutor = ScheduledThreadPoolExecutor(3)
-
     var user: User? = null
+    var workerAdded: AtomicReference<Int> = AtomicReference<Int>(0)
+    var commands = ConcurrentLinkedQueue<ByteArray>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        pref = getPreferences(
+            Context.MODE_PRIVATE)
         setContentView(R.layout.loading)
-        /*
         thread{
             connectToServer()
         }
-         */
         // from now on there will be another thread (the above thread) that runs synchronously with
         // this main thread
         setContentView(R.layout.activity_main)
         //items.add(R.id.item_1)
-        reset()
     }
     fun addText(text: String?){
         val constraintLayout = findViewById<ConstraintLayout>(R.id.ScrollMenuLayout)
@@ -80,7 +84,7 @@ class MainActivity : AppCompatActivity() {
         constraintSet.applyTo(constraintLayout)
         items.add(dynamicTextview.id)
     }
-    fun addItem(name: String?, description: String?, price: Int? = 0, image: Bitmap? = null) {
+    fun addItem(name: String?, description: String?, price: BigDecimal? = BigDecimal(0), count: Int? = 0, image: Bitmap? = null) {
         val constraintLayout = findViewById<ConstraintLayout>(R.id.ScrollMenuLayout)
         val dynamicCardView = CardView(this)
         dynamicCardView.id = View.generateViewId()
@@ -240,21 +244,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun add(view: View){ // for debug only
-        addItem("Gà nướng(?)", "Ngon nhứt nha ngon nhứt nha ngon nhứt nhaa", 0, BitmapFactory.decodeResource(resources, R.drawable.thanksgiving_chicken_96))
-        addItem("Khoai tây chiênnn", "Ngon hơn khi dùng lạnh!", 0, BitmapFactory.decodeResource(resources, R.drawable.mcdonald_s_french_fries_96))
-        addItem("Bắp nổ", "Dùng để ăn trong khi chờ đến giờ vào rạp", 0, BitmapFactory.decodeResource(resources, R.drawable.popcorn_96))
-        addItem("Boba Bola", "Bepis", 0, BitmapFactory.decodeResource(resources, R.drawable.cola_96))
+        addItem("Gà nướng(?)", "Ngon nhứt nha ngon nhứt nha ngon nhứt nhaa", BigDecimal(0), 0, BitmapFactory.decodeResource(resources, R.drawable.thanksgiving_chicken_96))
+        addItem("Khoai tây chiênnn", "Ngon hơn khi dùng lạnh!", BigDecimal(0), 0, BitmapFactory.decodeResource(resources, R.drawable.mcdonald_s_french_fries_96))
+        addItem("Bắp nổ", "Dùng để ăn trong khi chờ đến giờ vào rạp", BigDecimal(0), 0, BitmapFactory.decodeResource(resources, R.drawable.popcorn_96))
+        addItem("Boba Bola", "Bepis", BigDecimal(0), 0, BitmapFactory.decodeResource(resources, R.drawable.cola_96))
     }
 
     fun reset(){
-        val constraintLayout = findViewById<ConstraintLayout>(R.id.ScrollMenuLayout)
-        val count = constraintLayout.getChildCount() - 1
-        if (count > 0) {constraintLayout.removeViews(1, count)}
-        items = mutableListOf<Int>()
-        addItem("Gà nướng(?)", "Ngon nhứt nha ngon nhứt nha ngon nhứt nhaa", 0, BitmapFactory.decodeResource(resources, R.drawable.thanksgiving_chicken_96))
-        addItem("Khoai tây chiênnn", "Ngon hơn khi dùng lạnh!", 0, BitmapFactory.decodeResource(resources, R.drawable.mcdonald_s_french_fries_96))
-        addItem("Bắp nổ", "Dùng để ăn trong khi chờ đến giờ vào rạp", 0, BitmapFactory.decodeResource(resources, R.drawable.popcorn_96))
-        addItem("Boba Bola", "Bepis", 0, BitmapFactory.decodeResource(resources, R.drawable.cola_96))
+        user!!.DOS!!.write(tools.combine(("0003").toByteArray(StandardCharsets.UTF_16LE), tools.data_with_ASCII_byte("0")!!.toByteArray(StandardCharsets.US_ASCII)))
+        ping()
     }
 
     fun goTo(view: View) {
@@ -270,48 +268,52 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun connectToServer(){
+        Log.d("connecting", "Connecting to server")
 
-        val pref = getPreferences(
-            Context.MODE_PRIVATE)
-        val ssf: SSLSocketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
-        val ss: SSLSocket = ssf.createSocket("mancitiss.duckdns.org", 11111) as SSLSocket
-        //print("Successfully Connected!")
+        val ss: SSLSocket = ssf.createSocket(getString(R.string.serverAddress), resources.getInteger(R.integer.port)) as SSLSocket
+        Log.d("connecting", "Successfully Connected!")
         val DOS = DataOutputStream(ss.outputStream)
         val DIS = DataInputStream(ss.inputStream)
         val user = User()
         user.DIS = DIS
         user.DOS = DOS
-        user.username = pref.getString("username", null)
-        user.phone = pref.getString("phone", null)
-        user.email = pref.getString("email", null)
+        user.username = pref!!.getString("username", null)
+        user.phone = pref!!.getString("phone", null)
+        user.email = pref!!.getString("email", null)
         this.user = user
         thread{
             clientLoop()
         }
-        var token = pref.getString("token", null)
+        val token = pref!!.getString("token", null)
         if (token == "" || token == null) {
             // request server for a new token
-            DOS.write("0001".toByteArray(StandardCharsets.UTF_16LE))
-            var data = tools.receive_Unicode_Automatically(DIS)
-            //after trigger this login programmatically set the token value
-            val editor: SharedPreferences.Editor = pref.edit()
-            editor.putString("token", "True")
-            editor.apply()
+            DOS.write("0002".toByteArray(StandardCharsets.UTF_16LE))
         } else {
             //get existing token from preferences
+            DOS.write(
+                tools.combine(
+                    ("0001").toByteArray(
+                        StandardCharsets.UTF_16LE
+                    ),
+                    token.toByteArray(
+                        StandardCharsets.US_ASCII)
+                )
+            )
         }
     }
 
     private fun clientLoop(){
         try{
+            Log.d("connecting", "Looping")
             val user = this.user
             if (user!=null){
                 val localDIS = user.DIS
                 if (localDIS != null){
+                    Log.d("connecting", "Reading")
                     val s: PushbackInputStream = PushbackInputStream(localDIS)
-                    var b = s.read()
+                    val b = s.read()
                     if (b == -1){
-                        Thread.sleep(100)
+                        //Thread.sleep(100)
                     }
                     else {
                         s.unread(b)
@@ -319,32 +321,119 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-            exec.schedule( Runnable(){ @Override fun run(){ clientLoop(); }}, 1, TimeUnit.SECONDS)
+            Log.d("connecting", "Before calling loop")
+            exec.schedule( Runnable(){ @Override fun run(){ Log.d("connecting", "start looping"); clientLoop(); Log.d("connecting", "end looping");}}, 2, TimeUnit.SECONDS)
+            Log.d("connecting", "after calling loop")
         }
         catch (e: Exception){
-
+            Log.d("connecting", e.message!!)
         }
     }
 
     private fun receiveData(s: PushbackInputStream){
         try{
-            var b = -1
+            var keepReading = true
             do{
                 try{
                     // read data from s and process here, in this try block only, do not go outside
+                    val instruction = tools.receive_unicode(s, 8)
+                    Log.d("connecting", instruction)
+                    when (instruction) {
+                        "0001" -> { reset() }
+                        "0002" -> {
+                            val newToken = tools.receiveASCII(s, 32)
+                            val editor: SharedPreferences.Editor = pref!!.edit()
+                            editor.putString("token", newToken)
+                            editor.apply()
+                            reset()
+                        }
+                        "0003" -> {
+                            val json = tools.receive_Unicode_Automatically(s)
+                            val products: List<Product> = gson.fromJson(json, Array<Product>::class.java).toList()
+                            for (product in products){
+                                knownProducts.put(product.id!!, product)
+                            }
 
+                            // reset menu to 0 products
+                            val constraintLayout = findViewById<ConstraintLayout>(R.id.ScrollMenuLayout)
+                            val count = constraintLayout.getChildCount() - 1
+                            if (count > 0) {constraintLayout.removeViews(1, count)}
+                            items = mutableListOf<Int>()
+                            for (product in products){
+                                addItem(product.name, product.short_description, product.price, product.quantity)
+                            }
+                            /*
+                            addItem("Gà nướng(?)", "Ngon nhứt nha ngon nhứt nha ngon nhứt nhaa", 0, 0, BitmapFactory.decodeResource(resources, R.drawable.thanksgiving_chicken_96))
+                            addItem("Khoai tây chiênnn", "Ngon hơn khi dùng lạnh!", 0, 0, BitmapFactory.decodeResource(resources, R.drawable.mcdonald_s_french_fries_96))
+                            addItem("Bắp nổ", "Dùng để ăn trong khi chờ đến giờ vào rạp", 0, 0, BitmapFactory.decodeResource(resources, R.drawable.popcorn_96))
+                            addItem("Boba Bola", "Bepis", 0, 0, BitmapFactory.decodeResource(resources, R.drawable.cola_96))
+                             */
+                        }
+                    }
                 }
                 catch (e: Exception){
-                    print(e.message)
+                    Log.d("connecting", e.message!!)
                 }
                 finally {
-                    b = s.read()
-                    s.unread(b)
+                    Log.d("connecting", "final block")
+                    val b = s.read()
+                    if (b != -1 )
+                        s.unread(b)
+                    else keepReading = false
+                    Log.d("connecting", "final log ended")
                 }
-            } while (b != -1)
+            } while (keepReading)
         }
         catch (e: Exception){
-            print(e.message)
+            Log.d("connecting", e.message!!)
+        }
+    }
+
+    fun queueCommand(command: ByteArray){
+        commands.add(command)
+        ping()
+        addWorkerThread()
+    }
+
+    private fun addWorkerThread(){
+        if (0 == workerAdded.getAndSet(1)){
+            try{
+                executor.execute(Runnable(){@Override fun run(){ sendCommands() } })
+            }
+            catch (e: Exception){
+                Log.d("connecting", e.message!!)
+                try{
+                    workerAdded.set(0)
+                }
+                catch(se: Exception){}
+            }
+        }
+    }
+
+    private fun sendCommands(){
+        try{
+            while(!commands.isEmpty()){
+                val command = commands.poll()
+                user!!.DOS!!.write(command)
+                ping()
+            }
+            ping()
+            workerAdded.set(0)
+        }
+        catch(e: Exception){
+            Log.d("connecting", e.message!!)
+        }
+    }
+
+    private fun ping() {
+        try{
+            ssf.createSocket(getString(R.string.serverAddress), resources.getInteger(R.integer.port)).use {
+                val DOS = DataOutputStream(it.getOutputStream())
+                DOS.write(tools.combine("0012".toByteArray(StandardCharsets.UTF_16LE), pref!!.getString("token", "00000000000000000000000000000000")!!.toByteArray(StandardCharsets.US_ASCII)))
+            }
+        }
+        catch(e: Exception){
+            Log.d("connecting", e.message!!)
         }
     }
 }
