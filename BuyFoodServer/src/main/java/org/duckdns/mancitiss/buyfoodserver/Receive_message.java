@@ -47,7 +47,7 @@ public class Receive_message implements Runnable {
                                     // using gson
                                     String json = ServerMain.gson.toJson(products);
                                     // send the string to client
-                                    ServerMain.sessions.get(token).Queue_command(Tools.combine("0003".getBytes(StandardCharsets.UTF_16LE), json.getBytes(StandardCharsets.UTF_16LE)));
+                                    ServerMain.sessions.get(token).Queue_command(Tools.combine("0003".getBytes(StandardCharsets.UTF_16LE), Tools.data_with_unicode_byte(json).getBytes(StandardCharsets.UTF_16LE)));
                                 }
                             }
                             catch (Exception e){

@@ -21,7 +21,6 @@ import androidx.drawerlayout.widget.DrawerLayout
 import com.google.gson.Gson
 import java.io.DataInputStream
 import java.io.DataOutputStream
-import java.io.PushbackInputStream
 import java.math.BigDecimal
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.*
@@ -301,7 +300,7 @@ class MainActivity : AppCompatActivity() {
             )
         }
     }
-
+/*
     private fun clientLoop(){
         try{
             Log.d("connecting", "Looping")
@@ -328,10 +327,11 @@ class MainActivity : AppCompatActivity() {
         catch (e: Exception){
             Log.d("connecting", e.message!!)
         }
-    }
+    }*/
 
-    private fun receiveData(s: PushbackInputStream){
+    private fun clientLoop(){
         try{
+            val s = user!!.DIS!!
             var keepReading = true
             do{
                 try{
@@ -360,7 +360,11 @@ class MainActivity : AppCompatActivity() {
                             if (count > 0) {constraintLayout.removeViews(1, count)}
                             items = mutableListOf<Int>()
                             for (product in products){
-                                addItem(product.name, product.short_description, product.price, product.quantity)
+                                runOnUiThread {
+                                    // Stuff that updates the UI
+                                    addItem(product.name, product.short_description, product.price, product.quantity)
+                                }
+
                             }
                             /*
                             addItem("Gà nướng(?)", "Ngon nhứt nha ngon nhứt nha ngon nhứt nhaa", 0, 0, BitmapFactory.decodeResource(resources, R.drawable.thanksgiving_chicken_96))
@@ -373,14 +377,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 catch (e: Exception){
                     Log.d("connecting", e.message!!)
-                }
-                finally {
-                    Log.d("connecting", "final block")
-                    val b = s.read()
-                    if (b != -1 )
-                        s.unread(b)
-                    else keepReading = false
-                    Log.d("connecting", "final log ended")
+                    keepReading = false
                 }
             } while (keepReading)
         }
