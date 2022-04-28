@@ -1,14 +1,18 @@
 package org.duckdns.mancitiss.buyfoodserver;
 
+import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.security.SecureRandom;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Base64;
-
 import javax.net.ssl.SSLSocket;
+import javax.swing.ImageIcon;
 
 public class Receive_from_socket_not_logged_in implements Runnable {
 
@@ -129,6 +133,37 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                 ServerMain.sessions.get(data).is_waited.set(0);
                             } catch (Exception e){}
                         }
+                    }
+                }
+                else if (instruction.equals("1412")){
+                    String ID = Tools.receive_ASCII_Automatically(DIS);
+                    try{
+                        // check if ID is in database table PRODUCT
+                        try(PreparedStatement stmt = ServerMain.sql.prepareStatement("SELECT TOP 1 * FROM PRODUCT WHERE ID = ?");)
+                        {
+                            stmt.setString(1, ID);
+                            try(ResultSet rs = stmt.executeQuery();)
+                            {
+                                if (rs.next()) {
+                                    String filename = ID + "_1.jpg";
+                                    String filepath = ServerMain.img_path + filename;
+                                    System.out.println("Reading file: " + filename);
+                                    // check if filepath exists
+                                    File file = new File(filepath);
+                                    if (file.exists()) {
+                                        //file = file.listFiles()[0];
+                                        // read all bytes of file to byte array
+                                        System.out.println("File exists, sending");
+                                        //byte[] file_bytes = Files.readAllBytes(file.toPath());
+                                        // send file to client
+                                        DOS.write(Tools.data_with_ASCII_byte(Tools.ImageToBASE64(filepath)).getBytes(StandardCharsets.US_ASCII));
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception e){
+                        ServerMain.handleException(data, e.toString());
+                        e.printStackTrace();
                     }
                 }
                 else if (instruction.equals("0001")) {

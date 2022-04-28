@@ -166,6 +166,22 @@ public class Tools {
         return result;
     }
 
+    public static byte[] receive_bytes_Automatically(DataInputStream DIS){
+        byte[] result = null;
+        String temp = null;
+        try{
+            temp = receive_ASCII(DIS, 2);
+            int bytesize = Integer.parseInt(temp, 10);
+            temp = receive_ASCII(DIS, bytesize);
+            bytesize = Integer.parseInt(temp, 10);
+            result = receive_byte_array(DIS, bytesize);
+        } catch (Exception e){
+            e.printStackTrace();
+            result = null;
+        }
+        return result;
+    }
+
     /**
      *
      * @param DIS
@@ -346,5 +362,10 @@ public class Tools {
         else {
             return new byte[0];
         }
+    }
+
+    public static byte[] byte_with_length(byte[] data){
+        String databyte = Integer.toString(data.length, 10);
+        return combine((padleft(Integer.toString(databyte.length(), 10), 2, '0') + databyte).getBytes(StandardCharsets.US_ASCII), data);
     }
 }

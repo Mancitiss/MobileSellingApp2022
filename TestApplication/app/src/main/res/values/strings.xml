@@ -4,4 +4,7 @@
     <string name="navigation_label_main">Main</string>
     <string name="token">token</string>
     <string name="serverAddress">mancitiss.duckdns.org</string>
+    <string name="navigation_label_account">Account</string>
+    <string name="sign_up">Sign up</string>
+    <string name="login">Log in</string>
 </resources>

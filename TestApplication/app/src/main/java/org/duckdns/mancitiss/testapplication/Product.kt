@@ -1,5 +1,6 @@
 package org.duckdns.mancitiss.testapplication
 
+import android.graphics.Bitmap
 import java.math.BigDecimal
 
 class Product {
@@ -10,6 +11,10 @@ class Product {
     var category: String? = null
     var id: String? = null
     var quantity = 0
+
+    var cardViewID: Int? = null
+    var imageViewID: Int? = null
+    var image: Bitmap? = null
 
     fun Product() {}
 

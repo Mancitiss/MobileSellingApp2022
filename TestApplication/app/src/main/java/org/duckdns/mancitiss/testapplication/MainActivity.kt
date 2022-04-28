@@ -1,13 +1,17 @@
 package org.duckdns.mancitiss.testapplication
 
-import android.app.ActionBar
 import android.content.Context
 import android.content.SharedPreferences
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.TextPaint
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
+import android.util.Base64
 import android.util.Log
-import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -16,13 +20,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.view.GravityCompat
 import androidx.core.widget.TextViewCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.gson.Gson
 import java.io.DataInputStream
 import java.io.DataOutputStream
-import java.math.BigDecimal
 import java.nio.charset.StandardCharsets
+import java.util.*
 import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicReference
 import javax.net.ssl.SSLSocket
@@ -31,19 +36,21 @@ import kotlin.concurrent.thread
 
 
 class MainActivity : AppCompatActivity() {
-    var pref: SharedPreferences? = null
-    val tools = Tools()
-    val ssf: SSLSocketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
-    val gson: Gson = Gson()
+    companion object{
+        var pref: SharedPreferences? = null
 
-    var knownProducts = ConcurrentHashMap<String, Product>()
-    var items = mutableListOf<Int>()
-    var executor: ExecutorService = Executors.newCachedThreadPool()
-    var exec: ScheduledThreadPoolExecutor = ScheduledThreadPoolExecutor(3)
-    var user: User? = null
-    var workerAdded: AtomicReference<Int> = AtomicReference<Int>(0)
-    var commands = ConcurrentLinkedQueue<ByteArray>()
+        val ssf: SSLSocketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
+        val gson: Gson = Gson()
 
+        var backStack = Stack<Int>()
+        var knownProducts = ConcurrentHashMap<String, Product>()
+        var items = mutableListOf<Product>()
+        var executor: ExecutorService = Executors.newCachedThreadPool()
+        //var exec: ScheduledThreadPoolExecutor = ScheduledThreadPoolExecutor(3)
+        var user: User? = null
+        var workerAdded: AtomicReference<Int> = AtomicReference<Int>(0)
+        var commands = ConcurrentLinkedQueue<ByteArray>()
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         pref = getPreferences(
@@ -57,36 +64,15 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         //items.add(R.id.item_1)
     }
-    fun addText(text: String?){
-        val constraintLayout = findViewById<ConstraintLayout>(R.id.ScrollMenuLayout)
-        val dynamicTextview = TextView(this)
-        dynamicTextview.text = text
-        dynamicTextview.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.WRAP_CONTENT)
-        dynamicTextview.id = View.generateViewId()
-        constraintLayout.addView(dynamicTextview)
-        val constraintSet = ConstraintSet()
-        constraintSet.clone(constraintLayout)
-        constraintSet.connect(
-            dynamicTextview.id,
-            ConstraintSet.LEFT,
-            R.id.ScrollMenuLayout,
-            ConstraintSet.RIGHT,
-            resources.getDimension(R.dimen.zero_dp).toInt()
-        )
-        constraintSet.connect(
-            dynamicTextview.id,
-            ConstraintSet.TOP,
-            items.get(items.size-1),
-            ConstraintSet.BOTTOM,
-            resources.getDimension(R.dimen.min_space).toInt()
-        )
-        constraintSet.applyTo(constraintLayout)
-        items.add(dynamicTextview.id)
-    }
-    fun addItem(name: String?, description: String?, price: BigDecimal? = BigDecimal(0), count: Int? = 0, image: Bitmap? = null) {
+    fun addItem(product: Product) {
+        val dynamicCardViewId = View.generateViewId()
+        val imageViewId = View.generateViewId()
+        product.cardViewID = dynamicCardViewId
+        product.imageViewID = imageViewId
         val constraintLayout = findViewById<ConstraintLayout>(R.id.ScrollMenuLayout)
         val dynamicCardView = CardView(this)
-        dynamicCardView.id = View.generateViewId()
+        dynamicCardView.id = product.cardViewID!!
+        product.cardViewID = dynamicCardView.id
         dynamicCardView.layoutParams = ViewGroup.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT)
         constraintLayout.addView(dynamicCardView)
 
@@ -96,7 +82,7 @@ class MainActivity : AppCompatActivity() {
             constraintSet.connect(
                 dynamicCardView.id,
                 ConstraintSet.TOP,
-                items.get(items.size-1),
+                items.get(items.size-1).cardViewID!!,
                 ConstraintSet.BOTTOM,
                 resources.getDimension(R.dimen.cardView_margin_top).toInt()
             )
@@ -124,7 +110,7 @@ class MainActivity : AppCompatActivity() {
             resources.getDimension(R.dimen.cardView_margin_end).toInt()
         )
         constraintSet.applyTo(constraintLayout)
-        items.add(dynamicCardView.id)
+        items.add(product)
         // add layout to cardView
         val dynamicLayout = ConstraintLayout(this)
         dynamicLayout.id = View.generateViewId()
@@ -133,12 +119,12 @@ class MainActivity : AppCompatActivity() {
 
         // add image, texts to the layout created above
         val imageView = ImageView(this)
-        imageView.id = View.generateViewId()
+        imageView.id = product.imageViewID!!
         imageView.layoutParams = ViewGroup.LayoutParams(
             resources.getDimension(R.dimen.item_image_size_width).toInt(),
             resources.getDimension(R.dimen.item_image_size_height).toInt()
         )
-        imageView.setImageBitmap(image)
+        imageView.setImageBitmap(product.image)
         dynamicLayout.addView(imageView)
 
         constraintSet = ConstraintSet()
@@ -163,7 +149,7 @@ class MainActivity : AppCompatActivity() {
 
         val nameView = TextView(this)
         nameView.id = View.generateViewId()
-        nameView.text = name
+        nameView.text = product.name
         TextViewCompat.setTextAppearance(nameView, androidx.appcompat.R.style.TextAppearance_AppCompat_Large)
         nameView.layoutParams = ViewGroup.LayoutParams(
             resources.getDimension(R.dimen.item_title_width).toInt(),
@@ -200,7 +186,7 @@ class MainActivity : AppCompatActivity() {
 
         val desView = TextView(this)
         desView.id = View.generateViewId()
-        desView.text = description
+        desView.text = product.short_description
         TextViewCompat.setTextAppearance(desView, androidx.appcompat.R.style.TextAppearance_AppCompat_Medium)
         desView.layoutParams = ViewGroup.LayoutParams(
             resources.getDimension(R.dimen.item_description_width).toInt(),
@@ -234,36 +220,84 @@ class MainActivity : AppCompatActivity() {
         constraintSet.applyTo(dynamicLayout)
     }
 
-    fun remove(view: View){ // for debug only
+    fun reload(){
         val constraintLayout = findViewById<ConstraintLayout>(R.id.ScrollMenuLayout)
         val count = constraintLayout.getChildCount() - 1
         if (count > 0) {constraintLayout.removeViews(1, count)}
-
-        items = mutableListOf<Int>()
+        items = mutableListOf<Product>()
     }
 
-    fun add(view: View){ // for debug only
-        addItem("Gà nướng(?)", "Ngon nhứt nha ngon nhứt nha ngon nhứt nhaa", BigDecimal(0), 0, BitmapFactory.decodeResource(resources, R.drawable.thanksgiving_chicken_96))
-        addItem("Khoai tây chiênnn", "Ngon hơn khi dùng lạnh!", BigDecimal(0), 0, BitmapFactory.decodeResource(resources, R.drawable.mcdonald_s_french_fries_96))
-        addItem("Bắp nổ", "Dùng để ăn trong khi chờ đến giờ vào rạp", BigDecimal(0), 0, BitmapFactory.decodeResource(resources, R.drawable.popcorn_96))
-        addItem("Boba Bola", "Bepis", BigDecimal(0), 0, BitmapFactory.decodeResource(resources, R.drawable.cola_96))
-    }
-
-    fun reset(){
-        user!!.DOS!!.write(tools.combine(("0003").toByteArray(StandardCharsets.UTF_16LE), tools.data_with_ASCII_byte("0")!!.toByteArray(StandardCharsets.US_ASCII)))
+    fun load(index: Int = 0){
+        user!!.DOS!!.write(Tools.combine(("0003").toByteArray(StandardCharsets.UTF_16LE), Tools.data_with_ASCII_byte(index.toString()).toByteArray(StandardCharsets.US_ASCII)))
         ping()
     }
 
     fun goTo(view: View) {
-        if ((view as TextView).text == "Main"){
-            findViewById<DrawerLayout>(R.id.main_drawer_layout).closeDrawers()
-            setContentView(R.layout.activity_main)
-            reset()
+        when((view as TextView).text){
+            getString(R.string.navigation_label_main)->{
+                val view: View = findViewById(android.R.id.content)
+                backStack.push(view.id)
+                findViewById<DrawerLayout>(R.id.main_drawer_layout).closeDrawers()
+                setContentView(R.layout.activity_main)
+                load()
+            }
+            getString(R.string.navigation_label_account)->{
+                val view: View = findViewById(android.R.id.content)
+                backStack.push(view.id)
+                findViewById<DrawerLayout>(R.id.main_drawer_layout).closeDrawers()
+                setContentView(R.layout.activity_login)
+                // prepare to show login
+                preShowLogin()
+            }
         }
     }
 
+    fun goBack(view: View){
+        setContentView(backStack.pop())
+    }
+
+    private fun preShowLogin(){
+        val ss = SpannableString(getString(R.string.sign_up))
+        val clickableSpan: ClickableSpan = object : ClickableSpan() {
+            override fun onClick(textView: View) {
+                setContentView(R.layout.activity_sign_up)
+                preShowSignUp()
+            }
+
+            override fun updateDrawState(ds: TextPaint) {
+                super.updateDrawState(ds)
+                ds.isUnderlineText = false
+            }
+        }
+        ss.setSpan(clickableSpan, 0, ss.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        val textViewSignUp: TextView = findViewById(R.id.textViewSignUp)
+        textViewSignUp.setText(ss)
+        textViewSignUp.setMovementMethod(LinkMovementMethod.getInstance())
+        textViewSignUp.setHighlightColor(Color.TRANSPARENT)
+    }
+
+    private fun preShowSignUp() {
+        val ss = SpannableString(getString(R.string.login))
+        val clickableSpan: ClickableSpan = object : ClickableSpan() {
+            override fun onClick(textView: View) {
+                setContentView(R.layout.activity_login)
+                preShowLogin()
+            }
+
+            override fun updateDrawState(ds: TextPaint) {
+                super.updateDrawState(ds)
+                ds.isUnderlineText = false
+            }
+        }
+        ss.setSpan(clickableSpan, 0, ss.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        val textViewLogin: TextView = findViewById(R.id.textViewLogin)
+        textViewLogin.setText(ss)
+        textViewLogin.setMovementMethod(LinkMovementMethod.getInstance());
+        textViewLogin.setHighlightColor(Color.TRANSPARENT)
+    }
+
     fun openMenu(view: View) {
-        findViewById<DrawerLayout>(R.id.main_drawer_layout).openDrawer(Gravity.LEFT)
+        findViewById<DrawerLayout>(R.id.main_drawer_layout).openDrawer(GravityCompat.START)
     }
 
     private fun connectToServer(){
@@ -279,7 +313,7 @@ class MainActivity : AppCompatActivity() {
         user.username = pref!!.getString("username", null)
         user.phone = pref!!.getString("phone", null)
         user.email = pref!!.getString("email", null)
-        this.user = user
+        MainActivity.user = user
         thread{
             clientLoop()
         }
@@ -290,7 +324,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             //get existing token from preferences
             DOS.write(
-                tools.combine(
+                Tools.combine(
                     ("0001").toByteArray(
                         StandardCharsets.UTF_16LE
                     ),
@@ -300,34 +334,6 @@ class MainActivity : AppCompatActivity() {
             )
         }
     }
-/*
-    private fun clientLoop(){
-        try{
-            Log.d("connecting", "Looping")
-            val user = this.user
-            if (user!=null){
-                val localDIS = user.DIS
-                if (localDIS != null){
-                    Log.d("connecting", "Reading")
-                    val s: PushbackInputStream = PushbackInputStream(localDIS)
-                    val b = s.read()
-                    if (b == -1){
-                        //Thread.sleep(100)
-                    }
-                    else {
-                        s.unread(b)
-                        receiveData(s)
-                    }
-                }
-            }
-            Log.d("connecting", "Before calling loop")
-            exec.schedule( Runnable(){ @Override fun run(){ Log.d("connecting", "start looping"); clientLoop(); Log.d("connecting", "end looping");}}, 2, TimeUnit.SECONDS)
-            Log.d("connecting", "after calling loop")
-        }
-        catch (e: Exception){
-            Log.d("connecting", e.message!!)
-        }
-    }*/
 
     private fun clientLoop(){
         try{
@@ -336,42 +342,65 @@ class MainActivity : AppCompatActivity() {
             do{
                 try{
                     // read data from s and process here, in this try block only, do not go outside
-                    val instruction = tools.receive_unicode(s, 8)
+                    val instruction = Tools.receive_unicode(s, 8)
                     Log.d("connecting", instruction)
                     when (instruction) {
-                        "0001" -> { reset() }
+                        "0001" -> { load() }
                         "0002" -> {
-                            val newToken = tools.receiveASCII(s, 32)
+                            val newToken = Tools.receiveASCII(s, 32)
                             val editor: SharedPreferences.Editor = pref!!.edit()
                             editor.putString("token", newToken)
                             editor.apply()
-                            reset()
+                            load()
                         }
                         "0003" -> {
-                            val json = tools.receive_Unicode_Automatically(s)
+                            val json = Tools.receive_Unicode_Automatically(s)
                             val products: List<Product> = gson.fromJson(json, Array<Product>::class.java).toList()
                             for (product in products){
                                 knownProducts.put(product.id!!, product)
                             }
-
-                            // reset menu to 0 products
-                            val constraintLayout = findViewById<ConstraintLayout>(R.id.ScrollMenuLayout)
-                            val count = constraintLayout.getChildCount() - 1
-                            if (count > 0) {constraintLayout.removeViews(1, count)}
-                            items = mutableListOf<Int>()
                             for (product in products){
                                 runOnUiThread {
                                     // Stuff that updates the UI
-                                    addItem(product.name, product.short_description, product.price, product.quantity)
+                                    addItem(product)
                                 }
-
+                                thread{
+                                    try{
+                                        ssf.createSocket(getString(R.string.serverAddress), resources.getInteger(R.integer.port)).use {
+                                            val DOS = DataOutputStream(it.getOutputStream())
+                                            val DIS = DataInputStream(it.getInputStream())
+                                            DOS.write(Tools.combine("1412".toByteArray(StandardCharsets.UTF_16LE), Tools.data_with_ASCII_byte(product.id).toByteArray(StandardCharsets.US_ASCII)))
+                                            val base64 = Tools.receive_ASCII_Automatically(DIS)
+                                            val bitmapbyte: ByteArray = Base64.decode(base64.toByteArray(), Base64.DEFAULT)
+                                            val bitmap = BitmapFactory.decodeByteArray(
+                                                bitmapbyte,
+                                                0,
+                                                bitmapbyte.size
+                                            )
+                                            Log.d("connecting", "bitmap finished")
+                                            bitmap?.let {
+                                                Log.d("connecting", "bitmap exists")
+                                                product.image = it
+                                                runOnUiThread {
+                                                    var done = false
+                                                    while (!done) {
+                                                        product.imageViewID?.let {
+                                                            val imageView =
+                                                                findViewById<ImageView>(it)
+                                                            imageView.setImageBitmap(product.image)
+                                                            done = true;
+                                                            Log.d("connecting", "imageview updated")
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    catch(e: Exception){
+                                        Log.d("connecting", e.message!!)
+                                    }
+                                }
                             }
-                            /*
-                            addItem("Gà nướng(?)", "Ngon nhứt nha ngon nhứt nha ngon nhứt nhaa", 0, 0, BitmapFactory.decodeResource(resources, R.drawable.thanksgiving_chicken_96))
-                            addItem("Khoai tây chiênnn", "Ngon hơn khi dùng lạnh!", 0, 0, BitmapFactory.decodeResource(resources, R.drawable.mcdonald_s_french_fries_96))
-                            addItem("Bắp nổ", "Dùng để ăn trong khi chờ đến giờ vào rạp", 0, 0, BitmapFactory.decodeResource(resources, R.drawable.popcorn_96))
-                            addItem("Boba Bola", "Bepis", 0, 0, BitmapFactory.decodeResource(resources, R.drawable.cola_96))
-                             */
                         }
                     }
                 }
@@ -395,7 +424,7 @@ class MainActivity : AppCompatActivity() {
     private fun addWorkerThread(){
         if (0 == workerAdded.getAndSet(1)){
             try{
-                executor.execute(Runnable(){@Override fun run(){ sendCommands() } })
+                executor.execute({@Override fun run(){ sendCommands() } })
             }
             catch (e: Exception){
                 Log.d("connecting", e.message!!)
@@ -426,7 +455,7 @@ class MainActivity : AppCompatActivity() {
         try{
             ssf.createSocket(getString(R.string.serverAddress), resources.getInteger(R.integer.port)).use {
                 val DOS = DataOutputStream(it.getOutputStream())
-                DOS.write(tools.combine("0012".toByteArray(StandardCharsets.UTF_16LE), pref!!.getString("token", "00000000000000000000000000000000")!!.toByteArray(StandardCharsets.US_ASCII)))
+                DOS.write(Tools.combine("0012".toByteArray(StandardCharsets.UTF_16LE), pref!!.getString("token", "00000000000000000000000000000000")!!.toByteArray(StandardCharsets.US_ASCII)))
             }
         }
         catch(e: Exception){

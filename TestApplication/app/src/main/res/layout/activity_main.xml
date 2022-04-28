@@ -161,6 +161,13 @@
             android:text="@string/navigation_label_main"
             android:onClick="goTo"
             />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="20dp"
+            android:text="@string/navigation_label_account"
+            android:onClick="goTo"
+            />
 
     </LinearLayout>
 

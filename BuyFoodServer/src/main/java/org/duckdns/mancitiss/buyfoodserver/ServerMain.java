@@ -18,6 +18,7 @@ public class ServerMain {
     // main 
     static Connection sql;
     static String cnurl;
+    static final String img_path = "F:\\App\\BuyFoodServer\\Products\\images\\";
     
     static ExecutorService executor = Executors.newCachedThreadPool();
     static AtomicReference<Integer> isSqlWriting = new AtomicReference<Integer>(0);
