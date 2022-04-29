@@ -45,6 +45,8 @@ class MainActivity : AppCompatActivity() {
         var backStack = Stack<Int>()
         var knownProducts = ConcurrentHashMap<String, Product>()
         var items = mutableListOf<Product>()
+        var shoppingCart = ConcurrentHashMap<String, Int>()
+
         var executor: ExecutorService = Executors.newCachedThreadPool()
         //var exec: ScheduledThreadPoolExecutor = ScheduledThreadPoolExecutor(3)
         var user: User? = null

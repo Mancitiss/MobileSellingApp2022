@@ -35,7 +35,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
         // create new token that is not in database
         String new_token = generateNewToken();
         while (true) {
-            try (PreparedStatement stmt = ServerMain.sql.prepareStatement("SELECT * FROM TOKEN WHERE token = ?");)
+            try (PreparedStatement stmt = ServerMain.sql.prepareStatement("SELECT * FROM TOKENS WHERE token = ?");)
             {
                 stmt.setString(1, new_token);
                 try(ResultSet rs = stmt.executeQuery();)
@@ -139,7 +139,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                     String ID = Tools.receive_ASCII_Automatically(DIS);
                     try{
                         // check if ID is in database table PRODUCT
-                        try(PreparedStatement stmt = ServerMain.sql.prepareStatement("SELECT TOP 1 * FROM PRODUCT WHERE ID = ?");)
+                        try(PreparedStatement stmt = ServerMain.sql.prepareStatement("SELECT TOP 1 * FROM PRODUCTS WHERE ID = ?");)
                         {
                             stmt.setString(1, ID);
                             try(ResultSet rs = stmt.executeQuery();)
@@ -170,7 +170,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                     Thread.sleep(100);
                     data = Tools.receive_ASCII(DIS, 32);
                     System.out.println(data);
-                    try (PreparedStatement cmd = ServerMain.sql.prepareStatement("select top 1 token, username from TOKEN where token=?");){
+                    try (PreparedStatement cmd = ServerMain.sql.prepareStatement("select top 1 token, username from TOKENS where token=?");){
                         cmd.setString(1, data);
                         try (ResultSet rs = cmd.executeQuery()){
                             if (rs.next()){
