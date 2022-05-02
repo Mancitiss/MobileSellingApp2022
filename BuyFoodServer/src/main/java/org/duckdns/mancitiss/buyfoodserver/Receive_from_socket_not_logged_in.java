@@ -1,18 +1,18 @@
 package org.duckdns.mancitiss.buyfoodserver;
 
-import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.security.SecureRandom;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
+
 import javax.net.ssl.SSLSocket;
-import javax.swing.ImageIcon;
 
 public class Receive_from_socket_not_logged_in implements Runnable {
 
@@ -80,173 +80,511 @@ public class Receive_from_socket_not_logged_in implements Runnable {
             if (data != null && !data.isBlank()) {
                 String instruction = data;
                 System.out.println("Received instruction: " + instruction);
-                
-                if (instruction.equals("0012")) {
-                    Thread.sleep(100);
-                    data = Tools.receive_ASCII(DIS, 32);
-                    System.out.println(data);
-                    try{
-                        DIS.close();
-                    } catch (Exception e) {}
-                    try{
-                        DOS.close();
-                    } catch (Exception e) {}
-                    try{
-                        client.close();
-                    } catch (Exception e) {}
-                    
-                    boolean pass = false;
-                    if (ServerMain.sessions.containsKey(data) && ServerMain.sessions.get(data).is_waited.getAndSet(1) == 1) {
-                        pass = true;
-                    }
-                    int h = 0;
-                    while (!pass && h++ < 20 && !ServerMain.sessions.containsKey(data)) {
-                        Thread.sleep(1000);
-                    }
-                    
-                    if (!pass && ServerMain.sessions.containsKey(data)){
+                switch(instruction){
+                    // get product list from number Nth
+                    // when user request product list, we send them m number of products
+                    // m is defined in ServerMain.loadCount
+                    // we send them in order of date of creation (newest first)
+                    case "0003":{ 
+                        String indexStr = Tools.receive_ASCII_Automatically(DIS);
+                        int index = Integer.parseInt(indexStr);
                         try{
-                            boolean do_work = false;
-                            while(ServerMain.sessions.get(data).is_locked.getAndSet(1) == 1){
-                                Thread.sleep(1000);
-                            }
-                            
-                            if (ServerMain.sessions.get(data).client.isConnected()){
-                                    try{
-                                        do_work = true;
-                                        ServerMain.executor.execute(new Receive_message(data));
-                                    } catch (Exception e){
-                                        ServerMain.handleException(data, e.toString());
-                                        e.printStackTrace();
-                                    }
-                            } 
-                            else {
-                                ServerMain.shutdown(data);
-                            }
-                            if (!do_work) ServerMain.sessions.get(data).is_locked.set(0);
-                        } 
-                        catch (Exception clientquit){
-                            ServerMain.shutdown(data);
-                        }
-                        finally{
-                            try{
-                                ServerMain.sessions.get(data).is_waited.set(0);
-                            } catch (Exception e){}
-                        }
-                    }
-                }
-                else if (instruction.equals("1412")){
-                    String ID = Tools.receive_ASCII_Automatically(DIS);
-                    try{
-                        // check if ID is in database table PRODUCT
-                        try(PreparedStatement stmt = ServerMain.sql.prepareStatement("SELECT TOP 1 * FROM PRODUCTS WHERE ID = ?");)
-                        {
-                            stmt.setString(1, ID);
-                            try(ResultSet rs = stmt.executeQuery();)
-                            {
-                                if (rs.next()) {
-                                    String filename = ID + "_1.jpg";
-                                    String filepath = ServerMain.img_path + filename;
-                                    System.out.println("Reading file: " + filename);
-                                    // check if filepath exists
-                                    File file = new File(filepath);
-                                    if (file.exists()) {
-                                        //file = file.listFiles()[0];
-                                        // read all bytes of file to byte array
-                                        System.out.println("File exists, sending");
-                                        //byte[] file_bytes = Files.readAllBytes(file.toPath());
-                                        // send file to client
-                                        DOS.write(Tools.data_with_ASCII_byte(Tools.ImageToBASE64(filepath)).getBytes(StandardCharsets.US_ASCII));
+                            // initialize a list of products
+                            List<Product> products = new ArrayList<>();
+                            // read 10 products from database order by ID desc except the first 5 products using window function
+                            try(PreparedStatement ps = ServerMain.sql.prepareStatement("SELECT * FROM (select ROW_NUMBER() OVER (ORDER BY created DESC) AS rownumber, * FROM PRODUCTS) AS foo WHERE rownumber >= ? and rownumber < ?")){
+                                ps.setInt(1, index);
+                                ps.setInt(2, index + ServerMain.loadCount);
+                                try(ResultSet rs = ps.executeQuery();){
+                                    while (rs.next()){
+                                        products.add(new Product(rs.getString("ID"), rs.getString("name"), rs.getBigDecimal("price"), rs.getString("category"), rs.getInt("count"), rs.getString("description"), rs.getTimestamp("created").getTime(), rs.getInt("stars_1"), rs.getInt("stars_2"), rs.getInt("stars_3"), rs.getInt("stars_4"), rs.getInt("stars_5")));
                                     }
                                 }
                             }
-                        }
-                    } catch (Exception e){
-                        ServerMain.handleException(data, e.toString());
-                        e.printStackTrace();
-                    }
-                }
-                else if (instruction.equals("0001")) {
-                    Thread.sleep(100);
-                    data = Tools.receive_ASCII(DIS, 32);
-                    System.out.println(data);
-                    try (PreparedStatement cmd = ServerMain.sql.prepareStatement("select top 1 token, username from TOKENS where token=?");){
-                        cmd.setString(1, data);
-                        try (ResultSet rs = cmd.executeQuery()){
-                            if (rs.next()){
-                                // token is valid, send username to client
-                                DOS.write(("0001").getBytes(StandardCharsets.UTF_16LE));
-                                System.out.println("sent 0001 to client");
-                                // after finishing all the initializing, put the client into the session
-                                Client client = new Client();
-                                client.client = this.client;
-                                client.stream = DOS;
-                                client.DIS = DIS;
-                                client.is_locked.set(0);
-                                client.token = data;
-                                ServerMain.sessions.put(data, client);
-                            } 
-                            else {
-                                String token = Send_new_token(DOS);
-                                Client client = new Client();
-                                client.client = this.client;
-                                client.stream = DOS;
-                                client.DIS = DIS;
-                                client.is_locked.set(0);
-                                client.token = token;
-                                ServerMain.sessions.put(token, client);
+                            if (!products.isEmpty()){
+                                // create a string that serializes the list of products
+                                // using gson
+                                String json = ServerMain.gson.toJson(products);
+                                // send the string to client
+                                DOS.write(Tools.combine("0003".getBytes(StandardCharsets.UTF_16LE), Tools.data_with_unicode_byte(json).getBytes(StandardCharsets.UTF_16LE)));
                             }
                         }
-                    } catch(Exception e){
-                        e.printStackTrace();
-                        try{
-                            DIS.close();
-                        } catch (Exception e1){
-                        }
-                        try{
-                            DOS.close();
-                        } catch (Exception e2){
-                        }
-                        try{
-                            client.close();
-                        } catch (Exception e3){
-                        }
-                    }
-                } else if (instruction.equals("0002")){
-                    try{
-                        String token = Send_new_token(DOS);
-                        Client client = new Client();
-                        client.client = this.client;
-                        client.stream = DOS;
-                        client.DIS = DIS;
-                        client.is_locked.set(0);
-                        client.token = token;
-                        ServerMain.sessions.put(token, client);
-                    } catch (Exception e){
-                        e.printStackTrace();
-                    } finally {
-                        // close all possible resource with try catch
-                        try{
-                            try{
-                                DIS.close();
-                            } catch (Exception e){
-                            }
-                            try{
-                                DOS.close();
-                            } catch (Exception e){
-                            }
-                            try{
-                                client.close();
-                            } catch (Exception e){
-                            }
-                        } catch (Exception e){
+                        catch (Exception e){
+                            ServerMain.handleException( e.toString());
                             e.printStackTrace();
                         }
                     }
+                    break;
+
+                    // get product information by ID
+                    case "0004":{ 
+                        String ID = Tools.receive_ASCII_Automatically(DIS);
+                        try{
+                            // initialize a product
+                            Product product = null;
+                            // read product from database
+                            try(PreparedStatement ps = ServerMain.sql.prepareStatement("SELECT TOP 1 * FROM PRODUCTS WHERE ID = ?")){
+                                ps.setString(1, ID);
+                                try(ResultSet rs = ps.executeQuery();){
+                                    if (rs.next()){
+                                        product = new Product(rs.getString("ID"), rs.getString("name"), rs.getBigDecimal("price"), rs.getString("category"), rs.getInt("count"), rs.getString("description"), rs.getTimestamp("created").getTime(), rs.getInt("stars_1"), rs.getInt("stars_2"), rs.getInt("stars_3"), rs.getInt("stars_4"), rs.getInt("stars_5"));
+                                    }
+                                }
+                            }
+                            if (product != null){
+                                // create a string that serializes the product
+                                // using gson
+                                String json = ServerMain.gson.toJson(product);
+                                // send the string to client
+                                DOS.write(Tools.combine("0004".getBytes(StandardCharsets.UTF_16LE), Tools.data_with_unicode_byte(json).getBytes(StandardCharsets.UTF_16LE)));
+                            }
+                        }
+                        catch (Exception e){
+                            ServerMain.handleException( e.toString());
+                            e.printStackTrace();
+                        }
+
+                    }
+                    break;
+
+                    // claim products
+                    case "2610":{
+                        try{
+                            String token = Tools.receive_unicode(DIS, 32);
+                            if (Tools.isTokenRegistered(token)){ 
+                                Boolean success = true;
+                                String json = Tools.receive_Unicode_Automatically(DIS);
+                                Order newOrder = ServerMain.gson.fromJson(json, Order.class);
+                                // insert the order into database
+                                try(PreparedStatement ps = ServerMain.sql.prepareStatement("INSERT INTO ORDERS (ID, username, length, total, status, address, receiver, contactNumber) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")){
+                                    // create new random long and convert it to string with "OR" at the beginning
+                                    String newID = "OR" + ServerMain.rand.nextLong();
+                                    // check if newID exists in database
+                                    while (true){
+                                        try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("SELECT TOP 1 * FROM ORDERS WHERE ID = ?")){
+                                            ps2.setString(1, newID);
+                                            try(ResultSet rs = ps2.executeQuery();){
+                                                if (!rs.next()){
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        newID = "OR" + ServerMain.rand.nextLong();
+                                    }
+                                    ps.setString(1, newID);
+                                    boolean anonymous = true;
+                                    String username = "";
+                                    // check if username exists in table TOKENS at column username
+                                    try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("SELECT TOP 1 * FROM TOKENS WHERE token = ?")){
+                                        ps2.setString(1, token);
+                                        try(ResultSet rs = ps2.executeQuery();){
+                                            if (rs.next()){
+                                                if (rs.getNString("username") != null){
+                                                    ps.setNString(2, rs.getNString("username"));
+                                                    anonymous = false;
+                                                    username = rs.getNString("username");
+                                                }
+                                                else{
+                                                    ps.setNull(2, java.sql.Types.NVARCHAR);
+                                                }
+                                            }
+                                            else{
+                                                ps.setNull(2, java.sql.Types.NVARCHAR);
+                                            }
+                                        }
+                                    }
+                                    ps.setInt(3, newOrder.items.size());
+                                    BigDecimal total = new BigDecimal(0);
+                                    int index = 0;
+                                    List<String> productIDs = new ArrayList<>();
+                                    for (String key : newOrder.items.keySet()){
+                                        productIDs.add(key);
+                                        index += 1;
+                                        // get price of the product from database
+                                        try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("SELECT TOP 1 * FROM PRODUCTS WHERE ID = ? AND count >= ?")){
+                                            ps2.setString(1, key);
+                                            ps2.setInt(2, newOrder.items.get(key));
+                                            try(ResultSet rs = ps2.executeQuery();){
+                                                if (rs.next()){
+                                                    // update the count of the product
+                                                    Boolean update = false;
+                                                    try(PreparedStatement ps3 = ServerMain.sql.prepareStatement("UPDATE PRODUCTS SET count = ? WHERE ID = ?")){
+                                                        ps3.setInt(1, rs.getInt("count") - newOrder.items.get(key));
+                                                        ps3.setString(2, key);
+                                                        if (ps3.executeUpdate() > 0){
+                                                            update = true;
+                                                        }
+                                                    }
+                                                    if (update){
+                                                        BigDecimal subtotal = rs.getBigDecimal("price").multiply(new BigDecimal(newOrder.items.get(key)));
+                                                        total = total.add(subtotal);
+                                                        // insert order detail into ORDER_DETAILS table
+                                                        try(PreparedStatement ps3 = ServerMain.sql.prepareStatement("INSERT INTO ORDER_DETAILS (orderID, [index], productID, count, subTotal, status) VALUES (?, ?, ?, ?, ?, ?)")){
+                                                            ps3.setString(1, newID);
+                                                            ps3.setInt(2, index);
+                                                            ps3.setString(3, key);
+                                                            ps3.setInt(4, newOrder.items.get(key));
+                                                            ps3.setBigDecimal(5, subtotal);
+                                                            ps3.setString(6, "Pending");
+                                                            ps3.executeUpdate();
+                                                        }
+                                                    }
+                                                    
+                                                }
+                                                else {
+                                                    success = false;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (!success){
+                                        // rollback the order
+                                        try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("DELETE TOP (?) FROM ORDER_DETAILS WHERE orderID = ?")){
+                                            ps2.setInt(1, productIDs.size());
+                                            ps2.setString(2, newID);
+                                            ps2.executeUpdate();
+                                        }
+                                        for(String key : productIDs){
+                                            try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("UPDATE TOP (1) PRODUCTS SET count = count + ? WHERE ID = ?")){
+                                                ps2.setInt(1, newOrder.items.get(key));
+                                                ps2.setString(2, key);
+                                                ps2.executeUpdate();
+                                            }
+                                        }
+                                        // send error message to client
+                                        DOS.write("2612".getBytes(StandardCharsets.UTF_16LE));
+                                        throw new Exception("Failed to create order");
+                                    }
+                                    ps.setBigDecimal(4, total);
+                                    ps.setString(5, "Pending");
+                                    ps.setNString(6, newOrder.address);
+                                    ps.setNString(7, newOrder.name);
+                                    ps.setNString(8, newOrder.phoneNumber);
+                                    try{
+                                        if(anonymous == false){
+                                            // check if this account has a default address
+                                            // if not set the default address to the new address
+                                            try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("SELECT TOP 1 * FROM ACCOUNTS WHERE username = ?")){
+                                                ps2.setString(1, username);
+                                                try(ResultSet rs = ps2.executeQuery();){
+                                                    if (rs.next()){
+                                                        if (rs.getNString("address") == null){
+                                                            try(PreparedStatement ps3 = ServerMain.sql.prepareStatement("UPDATE ACCOUNTS SET address = ? WHERE username = ?")){
+                                                                ps3.setString(1, newOrder.address);
+                                                                ps3.setString(2, username);
+                                                                ps3.executeUpdate();
+                                                            }
+                                                        }
+                                                        if (rs.getNString("name") == null){
+                                                            try(PreparedStatement ps3 = ServerMain.sql.prepareStatement("UPDATE ACCOUNTS SET name = ? WHERE username = ?")){
+                                                                ps3.setString(1, newOrder.name);
+                                                                ps3.setString(2, username);
+                                                                ps3.executeUpdate();
+                                                            }
+                                                        }
+                                                        if (rs.getNString("phoneNumber") == null){
+                                                            try(PreparedStatement ps3 = ServerMain.sql.prepareStatement("UPDATE ACCOUNTS SET phoneNumber = ? WHERE username = ?")){
+                                                                ps3.setString(1, newOrder.phoneNumber);
+                                                                ps3.setString(2, username);
+                                                                ps3.executeUpdate();
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    catch(Exception e){                                    }
+                                    if (ps.executeUpdate() > 0){
+                                        DOS.write(Tools.combine("2611".getBytes(StandardCharsets.UTF_16LE), (newID).getBytes(StandardCharsets.US_ASCII)));
+                                    }
+                                }
+                                catch (Exception e){
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                        catch (Exception e){
+                            ServerMain.handleException( e.toString());
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+
+                    // payment
+                    case "2611":{
+                        String orderID = Tools.receive_ASCII(DIS, 22);
+                        try(PreparedStatement ps = ServerMain.sql.prepareStatement("SELECT TOP 1 * FROM ORDERS WHERE ID = ?")){
+                            ps.setString(1, orderID);
+                            try(ResultSet rs = ps.executeQuery();){
+                                if (rs.next()){
+                                    if (rs.getString("status").equals("Pending")){
+                                        try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("UPDATE ORDERS SET status = ? WHERE ID = ?")){
+                                            ps2.setString(1, "Paid");
+                                            ps2.setString(2, orderID);
+                                            if (ps2.executeUpdate() > 0){
+                                                DOS.write("2611".getBytes(StandardCharsets.UTF_16LE));
+                                            }
+                                        }
+                                    }
+                                    else{
+                                        DOS.write("2612".getBytes(StandardCharsets.UTF_16LE));
+                                    }
+                                }
+                                else{
+                                    DOS.write("2612".getBytes(StandardCharsets.UTF_16LE));
+                                }
+                            }
+                        }
+                        catch (Exception e){
+                            ServerMain.handleException( e.toString());
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+
+                    // cancel order BEFORE delivery
+                    case "2612":{
+                        try{
+                            String token = Tools.receive_ASCII(DIS, 32);
+                            String orderID = Tools.receive_ASCII_Automatically(DIS);
+                            // find username associated with token
+                            try(PreparedStatement ps = ServerMain.sql.prepareStatement("SELECT TOP 1 * FROM TOKENS WHERE token = ?")){
+                                ps.setString(1, token);
+                                try(ResultSet rs = ps.executeQuery();){
+                                    if (rs.next()){
+                                        String username = rs.getNString("username");
+                                        // check if orderID exists in database
+                                        try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("SELECT TOP 1 * FROM ORDERS WHERE ID = ?")){
+                                            ps2.setString(1, orderID);
+                                            try(ResultSet rs2 = ps2.executeQuery();){
+                                                if (rs2.next()){
+                                                    if (username.equals(rs2.getNString("username")) || rs2.getNString("username") == null){
+                                                        // update order status to Cancelled
+                                                        try(PreparedStatement ps3 = ServerMain.sql.prepareStatement("UPDATE ORDERS SET status = ? WHERE ID = ?")){
+                                                            ps3.setString(1, "Cancelled");
+                                                            ps3.setString(2, orderID);
+                                                            if (ps3.executeUpdate() > 0){
+                                                                DOS.write("2613".getBytes(StandardCharsets.UTF_16LE));
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                else{
+                                                    // send error message to client
+                                                    DOS.write("2612".getBytes(StandardCharsets.UTF_16LE));
+                                                    throw new Exception("Failed to cancel order");
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else{
+                                        // send error message to client
+                                        DOS.write("2612".getBytes(StandardCharsets.UTF_16LE));
+                                        throw new Exception("Failed to cancel order");
+                                    }
+                                }
+                            }
+
+                            // order canceled by user
+                            int length = 0;
+                            try(PreparedStatement ps = ServerMain.sql.prepareStatement("SELECT length FROM ORDERS WHERE orderID = ?")){
+                                ps.setString(1, orderID);
+                                try(ResultSet rs = ps.executeQuery();){
+                                    if (rs.next()){
+                                        length = rs.getInt("length");
+                                    }
+                                }
+                            }
+                            try(PreparedStatement ps = ServerMain.sql.prepareStatement("DELETE FROM ORDERS WHERE ID = ?")){
+                                ps.setString(1, orderID);
+                                ps.executeUpdate();
+                            }
+                            try(PreparedStatement ps = ServerMain.sql.prepareStatement("DELETE TOP (?) FROM ORDER_DETAILS WHERE orderID = ?")){
+                                ps.setInt(1, length);
+                                ps.setString(2, orderID);
+                                ps.executeUpdate();
+                            }
+                        }
+                        catch (Exception e){
+                            ServerMain.handleException( e.toString());
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+
+                    // send product's first image
+                    case "1412":{
+                        String ID = Tools.receive_ASCII_Automatically(DIS);
+                        try{
+                            // check if ID is in database table PRODUCT
+                            try(PreparedStatement stmt = ServerMain.sql.prepareStatement("SELECT TOP 1 * FROM PRODUCTS WHERE ID = ?");)
+                            {
+                                stmt.setString(1, ID);
+                                try(ResultSet rs = stmt.executeQuery();)
+                                {
+                                    if (rs.next()) {
+                                        //String filename = ID + "_1.jpg";
+                                        String filename = ID + "_1.*";
+                                        String filepath = ServerMain.img_path + filename;
+                                        System.out.println("Reading file: " + filename);
+                                        File files = new File(filepath);
+
+                                        // new file handling method
+                                        for (File file : files.listFiles()){
+                                            System.out.println("File exists, sending");
+                                            DOS.write(Tools.data_with_ASCII_byte(Tools.ImageToBASE64(file.getAbsolutePath())).getBytes(StandardCharsets.US_ASCII));
+                                        }
+                                        // old file handling method
+                                        /*
+                                        if (file.exists()) {
+                                            System.out.println("File exists, sending");
+                                            DOS.write(Tools.data_with_ASCII_byte(Tools.ImageToBASE64(filepath)).getBytes(StandardCharsets.US_ASCII));
+                                        }*/
+                                    }
+                                }
+                            }
+                        } catch (Exception e){
+                            ServerMain.handleException(e.toString());
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+                    // client has token and want to confirm token is valid
+                    case "0001": {
+                        Thread.sleep(100);
+                        data = Tools.receive_ASCII(DIS, 32);
+                        System.out.println(data);
+                        try (PreparedStatement cmd = ServerMain.sql.prepareStatement("select top 1 * from TOKENS where token=?");){
+                            cmd.setString(1, data);
+                            try (ResultSet rs = cmd.executeQuery()){
+                                if (rs.next()){
+                                    long timestamp = rs.getTimestamp("expirationDate").getTime();
+                                    long current = System.currentTimeMillis();
+                                    if (timestamp < current){
+                                        // token expired, delete it
+                                        try (PreparedStatement ps = ServerMain.sql.prepareStatement("DELETE FROM TOKENS WHERE token = ?")){
+                                            ps.setString(1, data);
+                                            ps.executeUpdate();
+                                        }
+                                        catch (Exception e){
+                                            ServerMain.handleException( e.toString());
+                                            e.printStackTrace();
+                                        }
+                                        Send_new_token(DOS);
+                                    }
+                                    else{
+                                        // token is valid, send username to client
+                                        DOS.write(("0001").getBytes(StandardCharsets.UTF_16LE));
+                                        System.out.println("sent 0001 to client");
+                                    }
+                                } 
+                                else {
+                                    Send_new_token(DOS);
+                                }
+                            }
+                        } catch(Exception e){
+                            ServerMain.handleException( e.toString());
+                            e.printStackTrace();
+                            try{
+                                DIS.close();
+                            } catch (Exception e1){
+                            }
+                            try{
+                                DOS.close();
+                            } catch (Exception e2){
+                            }
+                            try{
+                                client.close();
+                            } catch (Exception e3){
+                            }
+                        }
+                    } 
+                    break;
+
+                    // client doesn't have token and wants a new one
+                    case "0002":{
+                        try{
+                            Send_new_token(DOS);
+                        } catch (Exception e){
+                            ServerMain.handleException( e.toString());
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+
+                    // client wants to log in
+                    case "0010":{
+                        String username = Tools.receive_ASCII_Automatically(DIS);
+                        String password = Tools.receive_ASCII_Automatically(DIS);
+                        try{
+                            try(PreparedStatement cmd = ServerMain.sql.prepareStatement("select top 1 * from ACCOUNTS where username=? and pw=?");){
+                                cmd.setString(1, username);
+                                cmd.setString(2, password);
+                                try(ResultSet rs = cmd.executeQuery();){
+                                    if (rs.next()){
+                                        // deactivate all tokens of this user
+                                        try(PreparedStatement ps = ServerMain.sql.prepareStatement("DELETE FROM TOKENS WHERE username = ?")){
+                                            ps.setString(1, username);
+                                            ps.executeUpdate();
+                                        }
+                                        catch(Exception e){
+                                            ServerMain.handleException( e.toString());
+                                            e.printStackTrace();
+                                        }
+                                        // user exists, send token to client
+                                        String token = Send_new_token(DOS);
+                                        // update token with username
+                                        try(PreparedStatement ps = ServerMain.sql.prepareStatement("UPDATE TOKENS SET username = ? WHERE token = ?")){
+                                            ps.setString(1, username);
+                                            ps.setString(2, token);
+                                            ps.executeUpdate();
+                                        }
+                                        catch(Exception e){
+                                            ServerMain.handleException( e.toString());
+                                            e.printStackTrace();
+                                        }
+                                        // send user infomaion to client
+                                        String[] user_info = new String[3];
+                                        user_info[0] = rs.getString("name");
+                                        user_info[1] = rs.getString("phonenumber");
+                                        user_info[2] = rs.getString("address");
+                                        DOS.write(Tools.combine("0200".getBytes(StandardCharsets.UTF_16LE), Tools.data_with_unicode_byte(ServerMain.gson.toJson(user_info)).getBytes(StandardCharsets.UTF_16LE)));
+                                        
+                                    }
+                                    else{
+                                        // user doesn't exist, send error message to client
+                                        DOS.write("-200".getBytes(StandardCharsets.UTF_16LE));
+                                    }
+                                }
+                            }
+                        } catch(Exception e){
+                            ServerMain.handleException( e.toString());
+                            e.printStackTrace();
+                            try{
+                                DIS.close();
+                            } catch (Exception e1){
+                            }
+                            try{
+                                DOS.close();
+                            } catch (Exception e2){
+                            }
+                            try{
+                                client.close();
+                            } catch (Exception e3){
+                            }
+                        }
+                    }
+                    default:
+                    break;
                 }
             }
-        } catch (Exception e) {
+        } 
+        catch (Exception e) {
             e.printStackTrace();
+        }
+        finally{
             // close all possible resouces with try catch
             try {
                 DIS.close();
@@ -260,9 +598,6 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                 client.close();
             } catch (Exception e1) {
             }
-        }
-        finally{
-            
             System.out.flush();
         }
     }

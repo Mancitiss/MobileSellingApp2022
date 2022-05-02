@@ -3,10 +3,8 @@ package org.duckdns.mancitiss.buyfoodserver;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -21,13 +19,11 @@ public class ServerMain {
     static final String img_path = "F:\\App\\BuyFoodServer\\Products\\images\\";
     
     static ExecutorService executor = Executors.newCachedThreadPool();
-    static AtomicReference<Integer> isSqlWriting = new AtomicReference<Integer>(0);
 
     public static Gson gson = new Gson();
-
-    static ConcurrentHashMap<String, Client> sessions = new ConcurrentHashMap<String, Client>();
+    public static java.util.SplittableRandom rand = new java.util.SplittableRandom();
     public static final long token_expiration_time = 1000 * 60 * 60 * 24 * 1; // 1 day
-    public static final int loadCount = 4;
+    public static final int loadCount = 5;
     public static void main(String[] args) {
         try {
             String connectionUrl = "jdbc:sqlserver://" + System.getenv("DBServer") + ";"
@@ -76,39 +72,13 @@ public class ServerMain {
         }
     }
 
-    static void shutdown(String token) {
-        
-        try {
-            sessions.get(token).stream.close();
-        } catch (Exception e) {
-
-        }
-        try {
-            sessions.get(token).DIS.close();
-        } catch (Exception e) {
-
-        }
-        try {
-            sessions.get(token).client.close();
-        } catch (Exception e) {
-
-        }
-        try {
-            sessions.remove(token);
-            System.out.println(token + " quitted");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    public static void handleException(String token, String se) {
+    public static void handleException(String se) {
         try {
             if (se.contains("open and available Connection")) {
                 sql = DriverManager.getConnection(cnurl);
-            } else if (se.contains("Execution Timeout Expired")) {
+            } 
+            else if (se.contains("Execution Timeout Expired")) {
                 sql = DriverManager.getConnection(cnurl);
-            } else if (se.contains("was forcibly closed")) {
-                shutdown(token);
             }
         } catch (Exception e) {
             e.printStackTrace();
