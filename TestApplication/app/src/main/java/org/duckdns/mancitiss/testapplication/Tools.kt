@@ -1,5 +1,7 @@
 package org.duckdns.mancitiss.testapplication
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Build
 import androidx.annotation.RequiresApi
 import java.io.*
@@ -274,6 +276,11 @@ class Tools {
                 }
             }
             return result
+        }
+
+        fun BASE64ToImage(string: String): Bitmap {
+            val bitmapbyte = android.util.Base64.decode(string.toByteArray(), android.util.Base64.DEFAULT)
+            return BitmapFactory.decodeByteArray(bitmapbyte, 0, bitmapbyte.size)
         }
 
         /**
