@@ -31,38 +31,59 @@ public class Receive_from_socket_not_logged_in implements Runnable {
         return base64Encoder.encodeToString(randomBytes);
     }
 
-    private String Send_new_token(DataOutputStream DOS) {
-        // create new token that is not in database
+    private String Send_new_token(DataOutputStream DOS, String oldToken, boolean clear) throws Exception{
+        // create new token that is not in database and send it to client
+        // this method guarantees that the created token is new and not in database
+        // this method will throw an exception if the old token is not in the database (which will cause an infinite loop if we ignore the exception)
+        // if oldToken == null then insert the created token
+        // if oldToken != null then update the old token with the newly created one and clear the old token's information if clear is true
+        // return the created token
         String new_token = generateNewToken();
         while (true) {
-            try (PreparedStatement stmt = ServerMain.sql.prepareStatement("SELECT * FROM TOKENS WHERE token = ?");)
+            try (PreparedStatement stmt = ServerMain.sql.prepareStatement("SELECT * FROM TOKENS WHERE token = ?"))
             {
                 stmt.setString(1, new_token);
                 try(ResultSet rs = stmt.executeQuery();)
                 {
                     if (!rs.next()) {
-                        try(PreparedStatement stmt2 = ServerMain.sql.prepareStatement("INSERT INTO TOKEN (token, username, expirationDate) VALUES (?, NULL, ?)");)
-                        {
-                            stmt2.setString(1, new_token);
-                            stmt2.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis() + ServerMain.token_expiration_time));
-                            stmt2.executeUpdate();
-                            break;
+                        if (oldToken == null){
+                            try(PreparedStatement stmt2 = ServerMain.sql.prepareStatement("INSERT INTO TOKEN (token, username, expirationDate) VALUES (?, NULL, ?)");)
+                            {
+                                stmt2.setString(1, new_token);
+                                stmt2.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis() + ServerMain.token_expiration_time));
+                                stmt2.executeUpdate();
+                                break;
+                            }
+                        }
+                        else if (clear){
+                            try(PreparedStatement stmt2 = ServerMain.sql.prepareStatement("UPDATE TOKEN SET token = ?, username = NULL, expirationDate = ? WHERE token = ?");)
+                            {
+                                stmt2.setString(1, new_token);
+                                stmt2.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis() + ServerMain.token_expiration_time));
+                                stmt2.setString(3, oldToken);
+                                stmt2.executeUpdate();
+                                break;
+                            }
+                        }
+                        else {
+                            
+                            try(PreparedStatement stmt2 = ServerMain.sql.prepareStatement("UPDATE TOKEN SET token = ?, expirationDate = ? WHERE token = ?");)
+                            {
+                                stmt2.setString(1, new_token);
+                                stmt2.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis() + ServerMain.token_expiration_time));
+                                stmt2.setString(3, oldToken);
+                                stmt2.executeUpdate();
+                                break;
+                            }
                         }
                     }
                 }
             } 
-            catch (Exception e) {
-                e.printStackTrace();
-            }
             new_token = generateNewToken();
         }
-        try {
-            DOS.write(Tools.combine("0002".getBytes(StandardCharsets.UTF_16LE), new_token.getBytes(StandardCharsets.US_ASCII)));
-            DOS.flush();
-            System.out.println("Sent 0002 to client: "+ new_token + " " + new_token.length());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        DOS.write(Tools.combine("0002".getBytes(StandardCharsets.UTF_16LE), new_token.getBytes(StandardCharsets.US_ASCII)));
+        DOS.flush();
+        System.out.println("Sent 0002 to client: "+ new_token + " " + new_token.length());
         return new_token;
     }
 
@@ -453,7 +474,6 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                     break;
                     // client has token and want to confirm token is valid
                     case "0001": {
-                        Thread.sleep(100);
                         data = Tools.receive_ASCII(DIS, 32);
                         System.out.println(data);
                         try (PreparedStatement cmd = ServerMain.sql.prepareStatement("select top 1 * from TOKENS where token=?");){
@@ -463,25 +483,17 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                     long timestamp = rs.getTimestamp("expirationDate").getTime();
                                     long current = System.currentTimeMillis();
                                     if (timestamp < current){
-                                        // token expired, delete it
-                                        try (PreparedStatement ps = ServerMain.sql.prepareStatement("DELETE FROM TOKENS WHERE token = ?")){
-                                            ps.setString(1, data);
-                                            ps.executeUpdate();
-                                        }
-                                        catch (Exception e){
-                                            ServerMain.handleException( e.toString());
-                                            e.printStackTrace();
-                                        }
-                                        Send_new_token(DOS);
+                                        // token expired, send new token to client, clear old token data
+                                        Send_new_token(DOS, data, true);
                                     }
                                     else{
-                                        // token is valid, send username to client
-                                        DOS.write(("0001").getBytes(StandardCharsets.UTF_16LE));
-                                        System.out.println("sent 0001 to client");
+                                        // token is valid, send new token to client, no clear
+                                        Send_new_token(DOS, data, false);
                                     }
                                 } 
                                 else {
-                                    Send_new_token(DOS);
+                                    // old token doesn't exist, send new token to client 
+                                    Send_new_token(DOS, null, false);
                                 }
                             }
                         } catch(Exception e){
@@ -506,7 +518,8 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                     // client doesn't have token and wants a new one
                     case "0002":{
                         try{
-                            Send_new_token(DOS);
+                            // null + no clear = insert new token
+                            Send_new_token(DOS, null, false);
                         } catch (Exception e){
                             ServerMain.handleException( e.toString());
                             e.printStackTrace();
@@ -530,11 +543,11 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                             ps.executeUpdate();
                                         }
                                         catch(Exception e){
-                                            ServerMain.handleException( e.toString());
+                                            ServerMain.handleException(e.toString());
                                             e.printStackTrace();
                                         }
-                                        // user exists, send token to client
-                                        String token = Send_new_token(DOS);
+                                        // user exists, send new token to client
+                                        String token = Send_new_token(DOS, null, false);
                                         // update token with username
                                         try(PreparedStatement ps = ServerMain.sql.prepareStatement("UPDATE TOKENS SET username = ? WHERE token = ?")){
                                             ps.setString(1, username);
