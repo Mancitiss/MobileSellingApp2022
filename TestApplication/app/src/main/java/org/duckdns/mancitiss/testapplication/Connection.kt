@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import com.google.gson.Gson
+import org.duckdns.mancitiss.testapplication.entities.Foods
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.nio.charset.StandardCharsets
@@ -42,6 +43,11 @@ class Connection{
                             val json = Tools.receive_Unicode_Automatically(DIS)
                             val gson: Gson = Gson()
                             val productList = gson.fromJson(json, Array<Product>::class.java)
+                            for (product: Product in productList){
+                                activity.runOnUiThread{
+                                    activity.addFood(Foods(product.id!!, product.name!!, product.price.toFloat(), R.drawable.food))
+                                }
+                            }
                         }
                         else ->{
 

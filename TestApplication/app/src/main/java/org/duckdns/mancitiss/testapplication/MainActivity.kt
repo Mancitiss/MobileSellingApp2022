@@ -44,13 +44,14 @@ class MainActivity : AppCompatActivity() {
         foodAdapter.setData(arrFood)
 
         //Set Suggest Food Button
+        /*
         arrFood.add(Foods(1,"Kimbap", 50000F, R.drawable.food))
         arrFood.add(Foods(2,"Cơm chiên dương châu", 55000F, R.drawable.drink))
         arrFood.add(Foods(3,"Tobokki phô mai", 102000F, R.drawable.chicken))
         arrFood.add(Foods(4,"Trà sữa trân châu", 43000F, R.drawable.hamberger))
         arrFood.add(Foods(5,"Trà chanh", 12000F, R.drawable.noodle))
         arrFood.add(Foods(6,"Mì cay hải sản", 78000F, R.drawable.cake))
-
+        */
         rv_suggestfood.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         rv_suggestfood.adapter = foodAdapter
 
@@ -58,7 +59,11 @@ class MainActivity : AppCompatActivity() {
         rv_newfood.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         rv_newfood.adapter = foodAdapter
 
+        load(arrFood.size.toLong())
+    }
 
+    fun addFood(food: Foods){
+        arrFood.add(food)
     }
 
     fun openMenu(view: View) {
@@ -68,14 +73,14 @@ class MainActivity : AppCompatActivity() {
     fun reload(){
     }
 
-    fun load(index: Int = 0){
-
+    fun load(index: Long = 0){
+        Connection.load(this, this, index)
     }
 
     fun goTo(view: View) {
         when((view as TextView).text){
             getString(R.string.navigation_label_main)->{
-
+                findViewById<DrawerLayout>(R.id.main_drawer_layout).closeDrawers()
             }
             getString(R.string.navigation_label_account)->{
                 startActivity(Intent(this, Account::class.java))

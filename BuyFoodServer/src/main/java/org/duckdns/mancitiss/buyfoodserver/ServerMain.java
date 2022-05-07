@@ -48,16 +48,12 @@ public class ServerMain {
     private static void ExecuteServer() throws IOException {
         SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         try (SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(11111)) {
-            // translate below line of code from C#
-            // Console.WriteLine("Server at: {0}", IPAddress.Any);
             System.out.println("Server at: " + ss.getInetAddress());
             try {
                 while (true) {
                     SSLSocket client = (SSLSocket) ss.accept();
                     System.out.println("Connected");
                     try {
-                        // translate below line of code from C#
-                        // ThreadPool.QueueUserWorkItem(Receive_from_socket_not_logged_in, client);
                         executor.execute(new Receive_from_socket_not_logged_in(client));
                     } catch (Exception e) {
                         e.printStackTrace();

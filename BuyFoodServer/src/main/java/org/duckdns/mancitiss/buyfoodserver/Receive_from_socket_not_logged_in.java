@@ -118,7 +118,51 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                 ps.setInt(2, index + ServerMain.loadCount);
                                 try(ResultSet rs = ps.executeQuery();){
                                     while (rs.next()){
-                                        products.add(new Product(rs.getString("ID"), rs.getString("name"), rs.getBigDecimal("price"), rs.getString("category"), rs.getInt("count"), rs.getString("description"), rs.getTimestamp("created").getTime(), rs.getInt("stars_1"), rs.getInt("stars_2"), rs.getInt("stars_3"), rs.getInt("stars_4"), rs.getInt("stars_5")));
+                                        products.add(new Product(rs.getString("ID"), rs.getString("name"), rs.getLong("price"), rs.getString("category"), rs.getInt("count"), rs.getString("description"), rs.getTimestamp("created").getTime(), rs.getInt("stars_1"), rs.getInt("stars_2"), rs.getInt("stars_3"), rs.getInt("stars_4"), rs.getInt("stars_5")));
+                                    }
+                                }
+                            }
+                            if (!products.isEmpty()){
+                                // create a string that serializes the list of products
+                                // using gson
+                                String json = ServerMain.gson.toJson(products);
+                                // send the string to client
+                                DOS.write(Tools.combine("0003".getBytes(StandardCharsets.UTF_16LE), Tools.data_with_unicode_byte(json).getBytes(StandardCharsets.UTF_16LE)));
+                            }
+                        }
+                        catch (Exception e){
+                            ServerMain.handleException( e.toString());
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+
+                    // the same as 0003 but with a image
+                    case "0005":{ 
+                        String indexStr = Tools.receive_ASCII_Automatically(DIS);
+                        int index = Integer.parseInt(indexStr);
+                        try{
+                            // initialize a list of products
+                            List<Product> products = new ArrayList<>();
+                            // read 10 products from database order by ID desc except the first 5 products using window function
+                            try(PreparedStatement ps = ServerMain.sql.prepareStatement("SELECT * FROM (select ROW_NUMBER() OVER (ORDER BY created DESC) AS rownumber, * FROM PRODUCTS) AS foo WHERE rownumber >= ? and rownumber < ?")){
+                                ps.setInt(1, index);
+                                ps.setInt(2, index + ServerMain.loadCount);
+                                try(ResultSet rs = ps.executeQuery();){
+                                    while (rs.next()){
+                                        String ID = rs.getString("ID");
+                                        String filename = ID + "_1.*";
+                                        String filepath = ServerMain.img_path + filename;
+                                        System.out.println("Reading file: " + filename);
+                                        File files = new File(filepath);
+
+                                        // new file handling method
+                                        String avtString = "";
+                                        for (File file : files.listFiles()){
+                                            System.out.println("File exists, sending");
+                                            avtString = Tools.ImageToBASE64(file.getAbsolutePath());
+                                        }
+                                        products.add(new Product(rs.getString("ID"), rs.getString("name"), rs.getLong("price"), rs.getString("category"), rs.getInt("count"), rs.getString("description"), rs.getTimestamp("created").getTime(), rs.getInt("stars_1"), rs.getInt("stars_2"), rs.getInt("stars_3"), rs.getInt("stars_4"), rs.getInt("stars_5"), avtString));
                                     }
                                 }
                             }
@@ -148,7 +192,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                 ps.setString(1, ID);
                                 try(ResultSet rs = ps.executeQuery();){
                                     if (rs.next()){
-                                        product = new Product(rs.getString("ID"), rs.getString("name"), rs.getBigDecimal("price"), rs.getString("category"), rs.getInt("count"), rs.getString("description"), rs.getTimestamp("created").getTime(), rs.getInt("stars_1"), rs.getInt("stars_2"), rs.getInt("stars_3"), rs.getInt("stars_4"), rs.getInt("stars_5"));
+                                        product = new Product(rs.getString("ID"), rs.getString("name"), rs.getLong("price"), rs.getString("category"), rs.getInt("count"), rs.getString("description"), rs.getTimestamp("created").getTime(), rs.getInt("stars_1"), rs.getInt("stars_2"), rs.getInt("stars_3"), rs.getInt("stars_4"), rs.getInt("stars_5"));
                                     }
                                 }
                             }
@@ -483,7 +527,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                     long timestamp = rs.getTimestamp("expirationDate").getTime();
                                     long current = System.currentTimeMillis();
                                     if (timestamp < current){
-                                        // token expired, send new token to client, clear old token data
+                                        // token expired, clear old token data and send new token to client
                                         Send_new_token(DOS, data, true);
                                     }
                                     else{
@@ -518,7 +562,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                     // client doesn't have token and wants a new one
                     case "0002":{
                         try{
-                            // null + no clear = insert new token
+                            // oldtoken null = insert new token
                             Send_new_token(DOS, null, false);
                         } catch (Exception e){
                             ServerMain.handleException( e.toString());

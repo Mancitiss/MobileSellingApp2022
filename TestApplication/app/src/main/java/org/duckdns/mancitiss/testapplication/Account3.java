@@ -91,7 +91,7 @@ public class Account3 extends AppCompatActivity  {
     }
 
     public void saveInfo(View view) {
-        SessionInfo.name = ((EditText)findViewById(R.id.newName)).getText().toString();
+        //SessionInfo.name = ((EditText)findViewById(R.id.newName)).getText().toString();
     }
 
     /*

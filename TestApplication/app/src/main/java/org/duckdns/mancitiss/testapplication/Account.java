@@ -43,7 +43,7 @@ public class Account extends AppCompatActivity {
             }
         });
 
-        ((TextView)findViewById(R.id.name)).setText(SessionInfo.name);
+        //((TextView)findViewById(R.id.name)).setText(SessionInfo.name);
 
     }
 }
