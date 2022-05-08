@@ -101,4 +101,8 @@ class MainActivity : AppCompatActivity() {
         }
 
     }
+
+    fun openCart(view: View) {
+        startActivity(Intent(this, CartActivity::class.java))
+    }
 }

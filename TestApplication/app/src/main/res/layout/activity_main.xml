@@ -44,6 +44,7 @@
                         android:layout_width="50dp"
                         android:layout_height="50dp"
                         android:background="@color/white"
+                        android:onClick="openCart"
                         app:layout_constraintEnd_toStartOf="@+id/btn_noti"
                         app:layout_constraintTop_toTopOf="parent"
                         app:srcCompat="@drawable/ic_cart_32" />
