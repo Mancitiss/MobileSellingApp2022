@@ -15,6 +15,7 @@ import org.duckdns.mancitiss.testapplication.adapter.FoodAdapter
 import org.duckdns.mancitiss.testapplication.entities.Categories
 import org.duckdns.mancitiss.testapplication.entities.Foods
 import java.util.*
+import kotlin.concurrent.thread
 
 
 class MainActivity : AppCompatActivity() {
@@ -52,14 +53,17 @@ class MainActivity : AppCompatActivity() {
         arrFood.add(Foods(5,"Trà chanh", 12000F, R.drawable.noodle))
         arrFood.add(Foods(6,"Mì cay hải sản", 78000F, R.drawable.cake))
         */
+        /*
         rv_suggestfood.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         rv_suggestfood.adapter = foodAdapter
 
         //Set New Food Button
         rv_newfood.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         rv_newfood.adapter = foodAdapter
-
-        load(arrFood.size.toLong())
+        */
+        thread{
+            load(arrFood.size.toLong())
+        }
     }
 
     fun addFood(food: Foods){
@@ -75,6 +79,14 @@ class MainActivity : AppCompatActivity() {
 
     fun load(index: Long = 0){
         Connection.load(this, this, index)
+        runOnUiThread{
+            rv_suggestfood.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+            rv_suggestfood.adapter = foodAdapter
+
+            //Set New Food Button
+            rv_newfood.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+            rv_newfood.adapter = foodAdapter
+        }
     }
 
     fun goTo(view: View) {

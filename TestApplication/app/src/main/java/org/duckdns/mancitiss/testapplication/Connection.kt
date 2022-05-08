@@ -40,23 +40,27 @@ class Connection{
                     val command = Tools.receive_unicode(DIS, 8);
                     when (command){
                         "0003"->{
+                            Log.d("connecting", command)
                             val json = Tools.receive_Unicode_Automatically(DIS)
+                            Log.d("connecting", json)
                             val gson: Gson = Gson()
                             val productList = gson.fromJson(json, Array<Product>::class.java)
                             for (product: Product in productList){
                                 activity.runOnUiThread{
+                                    Log.d("connecting", "insert product")
                                     activity.addFood(Foods(product.id!!, product.name!!, product.price.toFloat(), R.drawable.food))
+                                    Log.d("connecting", "insert product finished" + product.id)
                                 }
                             }
                         }
                         else ->{
-
+                            Log.d("connecting", command)
                         }
                     }
                 }
             }
             catch(e: Exception){
-                Log.d("connecting", e.message!!)
+                Log.d("connecting", e.toString())
             }
         }
     }

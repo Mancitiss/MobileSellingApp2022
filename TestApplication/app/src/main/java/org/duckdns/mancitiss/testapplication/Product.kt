@@ -17,6 +17,8 @@ class Product {
     var stars_4 = 0
     var stars_5 = 0
 
+    var avatar: String? = null
+
     var cardViewID: Int? = null
     var imageViewID: Int? = null
     var image: Bitmap? = null
