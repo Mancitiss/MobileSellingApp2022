@@ -16,8 +16,8 @@ class FoodAdapter: RecyclerView.Adapter<FoodAdapter.RecyclerViewHolder>(){
 
     }
 
-    fun setData(arrData:List<Foods>){
-        arrFood = arrData as ArrayList<Foods>
+    fun setData(arrData:ArrayList<Foods>){
+        arrFood = arrData
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerViewHolder {
@@ -27,7 +27,9 @@ class FoodAdapter: RecyclerView.Adapter<FoodAdapter.RecyclerViewHolder>(){
     override fun onBindViewHolder(holder: RecyclerViewHolder, position: Int) {
         holder.itemView.tv_foodName.text = arrFood[position].name
         holder.itemView.tv_foodPrice.text = arrFood[position].price.toString()
-        holder.itemView.img_food.setImageResource(arrFood[position].img)
+        if (arrFood[position].img != null)
+            holder.itemView.img_food.setImageBitmap(arrFood[position].img)
+        else holder.itemView.img_food.setImageResource(R.drawable.food)
     }
 
     override fun getItemCount(): Int {

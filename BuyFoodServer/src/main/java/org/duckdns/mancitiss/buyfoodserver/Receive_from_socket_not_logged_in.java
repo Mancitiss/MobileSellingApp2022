@@ -118,7 +118,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                 ps.setInt(2, index + ServerMain.loadCount);
                                 try(ResultSet rs = ps.executeQuery();){
                                     while (rs.next()){
-                                        products.add(new Product(rs.getString("ID"), rs.getString("name"), rs.getLong("price"), rs.getString("category"), rs.getInt("count"), rs.getString("description"), rs.getTimestamp("created").getTime(), rs.getInt("stars_1"), rs.getInt("stars_2"), rs.getInt("stars_3"), rs.getInt("stars_4"), rs.getInt("stars_5")));
+                                        products.add(new Product(rs.getString("ID"), rs.getString("name"), rs.getLong("price"), rs.getString("category"), rs.getInt("count"), rs.getString("description"), rs.getTimestamp("created").getTime(), rs.getLong("stars"), rs.getLong("ratingCount")));
                                     }
                                 }
                             }
@@ -137,7 +137,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                     }
                     break;
 
-                    // the same as 0003 but with a image
+                    // send all products without images
                     case "0005":{ 
                         String indexStr = Tools.receive_ASCII_Automatically(DIS);
                         int index = Integer.parseInt(indexStr);
@@ -145,24 +145,72 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                             // initialize a list of products
                             List<Product> products = new ArrayList<>();
                             // read 10 products from database order by ID desc except the first 5 products using window function
-                            try(PreparedStatement ps = ServerMain.sql.prepareStatement("SELECT * FROM (select ROW_NUMBER() OVER (ORDER BY created DESC) AS rownumber, * FROM PRODUCTS) AS foo WHERE rownumber >= ? and rownumber < ?")){
+                            try(PreparedStatement ps = ServerMain.sql.prepareStatement("SELECT * FROM PRODUCTS")){
+                                try(ResultSet rs = ps.executeQuery();){
+                                    while (rs.next()){
+                                        String ID = rs.getString("ID");
+                                        String filename = ID + "_1.jpg";
+                                        String filepath = ServerMain.img_path + filename;
+                                        System.out.println("Reading file: " + filename);
+                                        File file = new File(filepath);
+
+                                        // new file handling method
+                                        String avtString = "";
+                                        /*
+                                        if (file.exists()){
+                                            System.out.println("File exists, sending");
+                                            avtString = Tools.ImageToBASE64(file.getAbsolutePath());
+                                        }
+                                        */
+                                        products.add(new Product(rs.getString("ID"), rs.getString("name"), rs.getLong("price"), rs.getString("category"), rs.getInt("count"), rs.getString("description"), rs.getTimestamp("created").getTime(), rs.getLong("stars"), rs.getLong("ratingCount"), avtString));
+                                    }
+                                }
+                            }
+                            if (!products.isEmpty()){
+                                // create a string that serializes the list of products
+                                // using gson
+                                String json = ServerMain.gson.toJson(products);
+                                //System.out.println(json);
+                                // send the string to client
+                                DOS.write(Tools.combine("5555".getBytes(StandardCharsets.UTF_16LE), Tools.data_with_unicode_byte(json).getBytes(StandardCharsets.UTF_16LE)));
+                            }
+                        }
+                        catch (Exception e){
+                            ServerMain.handleException( e.toString());
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+
+                    // the same as 0005 but get all products
+                    case "5555":{
+                        String indexStr = Tools.receive_ASCII_Automatically(DIS);
+                        int index = Integer.parseInt(indexStr);
+                        try{
+                            // initialize a list of products
+                            List<Product> products = new ArrayList<>();
+                            // read 10 products from database order by ID desc except the first 5 products using window function
+                            try(PreparedStatement ps = ServerMain.sql.prepareStatement("SELECT * FROM PRODUCTS ORDER BY created DESC")){
                                 ps.setInt(1, index);
                                 ps.setInt(2, index + ServerMain.loadCount);
                                 try(ResultSet rs = ps.executeQuery();){
                                     while (rs.next()){
                                         String ID = rs.getString("ID");
-                                        String filename = ID + "_1.*";
+                                        String filename = ID + "_1.jpg";
                                         String filepath = ServerMain.img_path + filename;
                                         System.out.println("Reading file: " + filename);
-                                        File files = new File(filepath);
+                                        File file = new File(filepath);
 
                                         // new file handling method
+                                        
                                         String avtString = "";
-                                        for (File file : files.listFiles()){
+                                        /*
+                                        if (file.exists()){
                                             System.out.println("File exists, sending");
                                             avtString = Tools.ImageToBASE64(file.getAbsolutePath());
                                         }
-                                        products.add(new Product(rs.getString("ID"), rs.getString("name"), rs.getLong("price"), rs.getString("category"), rs.getInt("count"), rs.getString("description"), rs.getTimestamp("created").getTime(), rs.getInt("stars_1"), rs.getInt("stars_2"), rs.getInt("stars_3"), rs.getInt("stars_4"), rs.getInt("stars_5"), avtString));
+                                        */
+                                        products.add(new Product(rs.getString("ID"), rs.getString("name"), rs.getLong("price"), rs.getString("category"), rs.getInt("count"), rs.getString("description"), rs.getTimestamp("created").getTime(), rs.getLong("stars"), rs.getLong("ratingCount"), avtString));
                                     }
                                 }
                             }
@@ -178,8 +226,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                             ServerMain.handleException( e.toString());
                             e.printStackTrace();
                         }
-                    }
-                    break;
+                    } break;
 
                     // get product information by ID
                     case "0004":{ 
@@ -192,7 +239,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                 ps.setString(1, ID);
                                 try(ResultSet rs = ps.executeQuery();){
                                     if (rs.next()){
-                                        product = new Product(rs.getString("ID"), rs.getString("name"), rs.getLong("price"), rs.getString("category"), rs.getInt("count"), rs.getString("description"), rs.getTimestamp("created").getTime(), rs.getInt("stars_1"), rs.getInt("stars_2"), rs.getInt("stars_3"), rs.getInt("stars_4"), rs.getInt("stars_5"));
+                                        product = new Product(rs.getString("ID"), rs.getString("name"), rs.getLong("price"), rs.getString("category"), rs.getInt("count"), rs.getString("description"), rs.getTimestamp("created").getTime(), rs.getLong("stars"), rs.getLong("ratingCount"));
                                     }
                                 }
                             }
@@ -491,15 +538,16 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                 {
                                     if (rs.next()) {
                                         //String filename = ID + "_1.jpg";
-                                        String filename = ID + "_1.*";
+                                        String filename = ID + "_1.jpg";
                                         String filepath = ServerMain.img_path + filename;
                                         System.out.println("Reading file: " + filename);
-                                        File files = new File(filepath);
+                                        File file = new File(filepath);
 
                                         // new file handling method
-                                        for (File file : files.listFiles()){
+                                        if (file.exists()){
                                             System.out.println("File exists, sending");
                                             DOS.write(Tools.data_with_ASCII_byte(Tools.ImageToBASE64(file.getAbsolutePath())).getBytes(StandardCharsets.US_ASCII));
+                                            System.out.println("File Sent");
                                         }
                                         // old file handling method
                                         /*
@@ -511,6 +559,10 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                 }
                             }
                         } catch (Exception e){
+                            try{
+                                DOS.write(Tools.data_with_ASCII_byte(" ").getBytes(StandardCharsets.US_ASCII));
+                            }
+                            catch(Exception ex){}
                             ServerMain.handleException(e.toString());
                             e.printStackTrace();
                         }

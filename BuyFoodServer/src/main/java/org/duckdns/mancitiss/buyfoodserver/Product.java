@@ -8,11 +8,8 @@ public class Product {
     public int quantity;
     public String description;
     public long created;
-    public int stars_1;
-    public int stars_2;
-    public int stars_3;
-    public int stars_4;
-    public int stars_5;
+    public long stars;
+    public long ratingCount;
 
     public String avatar;
 
@@ -20,7 +17,7 @@ public class Product {
     }
 
     // initialize
-    public Product(String id, String name, long price, String category, int quantity, String description, long created, int stars_1, int stars_2, int stars_3, int stars_4, int stars_5) {
+    public Product(String id, String name, long price, String category, int quantity, String description, long created, long stars, long ratingCount) {
         this.id = id;
         this.name = name;
         this.price = price;
@@ -28,14 +25,11 @@ public class Product {
         this.quantity = quantity;
         this.description = description;
         this.created = created;
-        this.stars_1 = stars_1;
-        this.stars_2 = stars_2;
-        this.stars_3 = stars_3;
-        this.stars_4 = stars_4;
-        this.stars_5 = stars_5;
+        this.stars = stars;
+        this.ratingCount = ratingCount;
     }
 
-    public Product(String id, String name, long price, String category, int quantity, String description, long created, int stars_1, int stars_2, int stars_3, int stars_4, int stars_5, String avatar) {
+    public Product(String id, String name, long price, String category, int quantity, String description, long created, long stars, long ratingCount, String avatar) {
         this.id = id;
         this.name = name;
         this.price = price;
@@ -43,12 +37,9 @@ public class Product {
         this.quantity = quantity;
         this.description = description;
         this.created = created;
-        this.stars_1 = stars_1;
-        this.stars_2 = stars_2;
-        this.stars_3 = stars_3;
-        this.stars_4 = stars_4;
-        this.stars_5 = stars_5;
         this.avatar = avatar;
+        this.stars = stars;
+        this.ratingCount = ratingCount;
     }
 
 }

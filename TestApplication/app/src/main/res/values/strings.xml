@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Test Application</string>
+    <string name="app_name">Eat my</string>
     <string name="IB2_des">Test</string>
     <string name="navigation_label_main">Main</string>
     <string name="token">token</string>
@@ -8,4 +8,5 @@
     <string name="sign_up">Sign up</string>
     <string name="login">Log in</string>
     <string name="pick_image_intent_chooser_title">HELLO</string>
+	<string name="code">XXXX "\t" XXXX "\t" XXXX "\t" XXXX</string>
 </resources>

@@ -1,8 +1,10 @@
 package org.duckdns.mancitiss.testapplication.entities
 
+import android.graphics.Bitmap
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import org.duckdns.mancitiss.testapplication.Product
 import java.io.Serializable
 
 @Entity(tableName = "Food")
@@ -14,8 +16,14 @@ data class Foods(
     var name: String,
 
     @ColumnInfo(name = "price")
-    var price:Float,
+    var price:Long,
 
     @ColumnInfo(name = "img")
-    var img: Int
+    var img: Bitmap?,
+
+    @ColumnInfo(name = "product")
+    var product: Product
 ) : Serializable
+{
+    constructor(product: Product): this(product.id, product.name, product.price, product.image, product)
+}

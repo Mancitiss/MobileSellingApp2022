@@ -4,31 +4,27 @@ import android.graphics.Bitmap
 import java.math.BigDecimal
 
 class Product {
-    var name: String? = null
+    var name: String = ""
     var price: Long = 0
-    var category: String? = null
-    var id: String? = null
+    var category: String = ""
+    var id: String = ""
     var quantity = 0
-    var description: String? = null
+    var description: String = ""
     var created: Long = 0
-    var stars_1 = 0
-    var stars_2 = 0
-    var stars_3 = 0
-    var stars_4 = 0
-    var stars_5 = 0
+    var stars: Long = 0
+    var ratingCount: Long = 0
 
-    var avatar: String? = null
+    var averageStars: Float = 0f
 
-    var cardViewID: Int? = null
-    var imageViewID: Int? = null
+    var avatar: String = ""
     var image: Bitmap? = null
 
     fun Product() {}
 
     fun Product(
-        id: String?,
-        name: String?,
-        category: String?,
+        id: String,
+        name: String,
+        category: String,
         price: Long,
         quantity: Int
     ) {

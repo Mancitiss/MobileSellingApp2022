@@ -3,6 +3,7 @@ package org.duckdns.mancitiss.testapplication
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import java.io.*
 import java.nio.charset.StandardCharsets
@@ -41,6 +42,7 @@ class Tools {
             var received_byte: Int
             do {
                 received_byte = DIS.read(buffer, total_byte_received, byte_expected)
+                Log.d("connecting", "received: " + received_byte.toString() + " bytes")
                 if (received_byte > 0) {
                     total_byte_received += received_byte
                     byte_expected -= received_byte
@@ -154,9 +156,10 @@ class Tools {
                 var bytesize = result.toInt(10) * 2
                 result = receive_unicode(DIS, bytesize)
                 bytesize = result.toInt(10)
+                Log.d("connecting", "expecting to get " + bytesize.toString() + " bytes")
                 result = receive_unicode(DIS, bytesize)
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.d("connecting", e.stackTraceToString())
                 result = ""
             }
             return result
