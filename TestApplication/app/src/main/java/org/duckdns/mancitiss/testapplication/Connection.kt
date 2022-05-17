@@ -1,14 +1,16 @@
 package org.duckdns.mancitiss.testapplication
 
+import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import android.view.View
+import android.widget.EditText
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import org.duckdns.mancitiss.testapplication.entities.Foods
+import org.duckdns.mancitiss.testapplication.entities.UserInfo
 import java.io.DataInputStream
 import java.io.DataOutputStream
-import java.lang.reflect.Type
 import java.nio.charset.StandardCharsets
 import javax.net.ssl.SSLSocket
 import javax.net.ssl.SSLSocketFactory
@@ -80,6 +82,243 @@ class Connection{
             }
             catch(e: Exception){
                 Log.d("connecting", e.toString())
+            }
+        }
+
+        fun isLoggedIn(activity: Activity, context: Context) : Boolean{
+            try{
+                val pref: SharedPreferences = activity.getPreferences(Context.MODE_PRIVATE)
+                val model = Models.getInstance()
+
+                var username = pref!!.getString("username", null)
+                var phone = pref!!.getString("phone", null)
+                var email = pref!!.getString("email", null)
+                var token = pref!!.getString("token", null)
+                var newToken = ""
+                if (token != null && token.isNotBlank()){
+                     newToken = UpdateToken(activity, context, token)
+                }
+                else {
+                    newToken = UpdateToken(activity, context, "00000000000000000000000000000000000000000000000000")
+                }
+                val editor: SharedPreferences.Editor = pref!!.edit()
+                editor.putString("token", newToken)
+                editor.apply()
+                if (username!=null && email!=null){
+                    return true
+                }
+                return false
+            }
+            catch(e: Exception){
+                return false
+            }
+        }
+
+        private fun UpdateToken(activity: Activity, context:Context, token: String): String{
+            try {
+                val pref: SharedPreferences = activity.getPreferences(Context.MODE_PRIVATE)
+                val ssf: SSLSocketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
+                var newToken = ""
+                (ssf.createSocket(
+                    context.getString(R.string.serverAddress),
+                    context.resources.getInteger(R.integer.port)
+                ) as SSLSocket).use {
+                    val DOS = DataOutputStream(it.getOutputStream())
+                    val DIS = DataInputStream(it.getInputStream())
+                    DOS.write(Tools.combine("0001".toByteArray(StandardCharsets.UTF_16LE), Tools.data_with_unicode_byte(token).toByteArray(StandardCharsets.UTF_16LE)))
+                    when(val instruction = Tools.receive_unicode(DIS, 8)){
+                        "0002"->{
+                            newToken = Tools.receive_ASCII_Automatically(DIS)
+                        }
+                        "0404"->{
+                            newToken = Tools.receive_ASCII_Automatically(DIS)
+                            val editor: SharedPreferences.Editor = pref!!.edit()
+                            editor.putString("username", null)
+                            editor.putString("phone", null)
+                            editor.putString("email", null)
+                            editor.apply()
+                        }
+                    }
+                }
+                return newToken
+            }
+            catch(e: Exception){
+                return token
+            }
+        }
+
+        fun ChangePassword(activity: Activity, context: Context, opw: String, npw: String): Boolean{
+            try{
+                val pref: SharedPreferences = activity.getPreferences(Context.MODE_PRIVATE)
+                val ssf: SSLSocketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
+                val username = pref!!.getString("username", null)
+                if (username != null){
+                    (ssf.createSocket(
+                        context.getString(R.string.serverAddress),
+                        context.resources.getInteger(R.integer.port)
+                    ) as SSLSocket).use {
+                        val DOS = DataOutputStream(it.getOutputStream())
+                        val DIS = DataInputStream(it.getInputStream())
+                        DOS.write(("0013"+Tools.data_with_unicode_byte(opw)+Tools.data_with_unicode_byte(npw)+Tools.data_with_unicode_byte(username)).toByteArray(StandardCharsets.UTF_16LE))
+                        when(Tools.receive_unicode(DIS, 8)){
+                            "0013"->{
+                                return true
+                            }
+                            "0014"->{
+                                return false
+                            }
+                            else -> {
+                                return false
+                            }
+                        }
+                    }
+                }
+                else {
+                    // user didn't log in, how come?
+                    return false
+                }
+            }
+            catch(e: Exception){
+                return false
+            }
+        }
+
+        fun ChangeInfo(activity: Activity, context: Context, info: UserInfo) : Boolean{
+            try{
+                val pref: SharedPreferences = activity.getPreferences(Context.MODE_PRIVATE)
+                val ssf: SSLSocketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
+                (ssf.createSocket(
+                    context.getString(R.string.serverAddress),
+                    context.resources.getInteger(R.integer.port)
+                ) as SSLSocket).use {
+                    val DOS = DataOutputStream(it.getOutputStream())
+                    val DIS = DataInputStream(it.getInputStream())
+                    val token: String? = pref.getString("token", null)
+                    val username: String? = pref.getString("username", null)
+                    if (!token.isNullOrBlank() && !username.isNullOrBlank()){
+                        val token = pref.getString("token", "00000000000000000000000000000000000000000000000000")
+                        val username = pref.getString("username", "00000000000000000000000000000000000000000000000000")
+                        //val info: UserInfo = UserInfo()
+                        /*
+                        info.name = activity.findViewById<EditText>(R.id.name_Account).toString()
+                        info.phone = activity.findViewById<EditText>(R.id.phone_Account).toString()
+                        info.email = activity.findViewById<EditText>(R.id.email_Account).toString()
+                        */
+                        val gson: Gson = Gson()
+                        val json = gson.toJson(info, UserInfo::class.java)
+                        DOS.write(Tools.combine("0014".toByteArray(StandardCharsets.UTF_16LE),
+                            Tools.data_with_ASCII_byte(token).toByteArray(StandardCharsets.US_ASCII),
+                            Tools.data_with_unicode_byte(username).toByteArray(StandardCharsets.UTF_16LE),
+                            Tools.data_with_unicode_byte(json).toByteArray(StandardCharsets.UTF_16LE)
+                        ))
+                        when(Tools.receive_unicode(DIS, 8)){
+                            "0014" ->{
+                                val editor: SharedPreferences.Editor = pref!!.edit()
+                                editor.putString("name", info.name)
+                                editor.putString("phone", info.phone)
+                                editor.putString("email", info.email)
+                                editor.apply()
+                                return true
+                            }
+                            else -> {
+                                return false
+                            }
+                        }
+                    }
+                    return false
+                }
+            }
+            catch (e: Exception){
+                return false
+            }
+        }
+
+        fun SignUp(activity: Activity, context: Context, username: String, email: String, pw: String): Boolean{
+            try {
+                var signUpInfo: SignUpInfo = SignUpInfo()
+                signUpInfo.username = username
+                signUpInfo.email = email
+                signUpInfo.pw = pw
+                val gson: Gson = Gson()
+                val json: String = gson.toJson(signUpInfo, SignUpInfo::class.java)
+                val pref: SharedPreferences = activity.getPreferences(Context.MODE_PRIVATE)
+                val ssf: SSLSocketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
+                (ssf.createSocket(
+                    context.getString(R.string.serverAddress),
+                    context.resources.getInteger(R.integer.port)
+                ) as SSLSocket).use {
+                    val DOS = DataOutputStream(it.getOutputStream())
+                    val DIS = DataInputStream(it.getInputStream())
+                    DOS.write(Tools.combine("0011".toByteArray(StandardCharsets.UTF_16LE), Tools.data_with_unicode_byte(json).toByteArray(StandardCharsets.UTF_16LE)))
+                    when(Tools.receive_unicode(DIS, 8)){
+                        "0011"->{
+                            return true
+                        }
+                        else ->{
+                            return false
+                        }
+                    }
+                }
+            }
+            catch(e: Exception){
+                return false
+            }
+        }
+
+        fun LogIn(activity: Activity, context: Context, username: String, pw: String) : Boolean{
+            try{
+                val pref: SharedPreferences = activity.getPreferences(Context.MODE_PRIVATE)
+                val ssf: SSLSocketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
+                (ssf.createSocket(
+                    context.getString(R.string.serverAddress),
+                    context.resources.getInteger(R.integer.port)
+                ) as SSLSocket).use {
+                    val DOS = DataOutputStream(it.getOutputStream())
+                    val DIS = DataInputStream(it.getInputStream())
+                    DOS.write(Tools.combine("0010".toByteArray(StandardCharsets.UTF_16LE), Tools.data_with_unicode_byte(username).toByteArray(StandardCharsets.UTF_16LE), Tools.data_with_unicode_byte(pw).toByteArray(StandardCharsets.UTF_16LE)))
+                    when(Tools.receive_unicode(DIS, 8)){
+                        "0200"->{
+                            val json = Tools.receive_Unicode_Automatically(DIS)
+                            val strings: Array<String> = Gson().fromJson(json, Array<String>::class.java)
+                            val command = Tools.receive_unicode(DIS, 8)
+                            if (command == "0004"){
+                                val newToken = Tools.receiveASCII(DIS, 32)
+                                val editor: SharedPreferences.Editor = pref!!.edit()
+                                editor.putString("token", newToken)
+                                editor.putString("name", strings[0])
+                                editor.putString("email", strings[1])
+                                editor.putString("phone", strings[2])
+                                editor.putString("address", strings[3])
+                                editor.apply()
+                                return true
+                            }
+                            return false
+                        }
+                        "0004"->{
+                            val newToken = Tools.receiveASCII(DIS, 32)
+                            val command = Tools.receive_unicode(DIS, 8)
+                            if (command == "0200"){
+                                val json = Tools.receive_Unicode_Automatically(DIS)
+                                val strings: Array<String> = Gson().fromJson(json, Array<String>::class.java)
+                                val editor: SharedPreferences.Editor = pref!!.edit()
+                                editor.putString("token", newToken)
+                                editor.putString("name", strings[0])
+                                editor.putString("email", strings[1])
+                                editor.putString("phone", strings[2])
+                                editor.putString("address", strings[3])
+                                editor.apply()
+                                return true
+                            }
+                            else return false
+                        }
+                        else ->{
+                            return false
+                        }
+                    }
+                }
+            }
+            catch(e: Exception){
+                return false
             }
         }
     }

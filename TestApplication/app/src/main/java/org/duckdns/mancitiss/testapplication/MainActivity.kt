@@ -88,6 +88,19 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        btn_noti.setOnClickListener {
+            openNotification(it)
+        }
+        btn_cart.setOnClickListener {
+            openCart(it)
+        }
+        menuGoToMain.setOnClickListener{
+            goTo(it)
+        }
+        menuGoToAccount.setOnClickListener{
+            goTo(it)
+        }
+
         thread{
             load(arrNewestFood.size.toLong())
         }
@@ -122,11 +135,18 @@ class MainActivity : AppCompatActivity() {
     fun goTo(view: View) {
         when((view as TextView).text){
             getString(R.string.navigation_label_main)->{
+                Log.d("Connecting","main clicked")
                 findViewById<DrawerLayout>(R.id.main_drawer_layout).closeDrawers()
             }
             getString(R.string.navigation_label_account)->{
-                startActivity(Intent(this, Account::class.java))
-                finish()
+                Log.d("Connecting", "account clicked")
+                if (Connection.isLoggedIn(this, this)) {
+                    Log.d("Connecting", "Account starting")
+                    startActivity(Intent(this, Account::class.java))
+                } else {
+                    Log.d("Connecting", "Login starting")
+                    startActivity(Intent(this, Login::class.java))
+                }
             }
         }
 

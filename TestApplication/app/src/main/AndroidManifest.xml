@@ -24,6 +24,13 @@
             android:screenOrientation="portrait"/>
         <activity android:name=".Account2"/>
         <activity android:name=".Account3"/>
+        <activity android:name=".ReceiptActivity"/>
+        <activity android:name=".CartActivity"/>
+        <activity android:name=".PaymentMainActivity"/>
+        <activity android:name=".PaymentMainActivity2"/>
+        <activity android:name=".PaymentMainActivity3"/>
+        <activity android:name=".PaymentMainActivity4"/>
+        <activity android:name=".Login"/>
     </application>
 
 </manifest>

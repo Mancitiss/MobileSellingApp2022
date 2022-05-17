@@ -15,6 +15,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.duckdns.mancitiss.testapplication.entities.UserInfo;
+
 //import com.theartofdev.edmodo.cropper.CropImage;
 //import com.theartofdev.edmodo.cropper.CropImageView;
 
@@ -22,29 +24,42 @@ import android.widget.Toast;
 public class Account3 extends AppCompatActivity  {
 
     ImageView imageView;
-    TextView textView;
+    TextView textViewUpdate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account3);
+
         imageView = (ImageView) findViewById(R.id.back_profile);
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent3 = new Intent(Account3.this, MainActivity.class);
                 startActivity(intent3);
-                Toast.makeText(Account3.this, "you clicked to back", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(Account3.this, "quay lại", Toast.LENGTH_SHORT).show();
             }
         });
 
-        textView = (TextView) findViewById(R.id.btn_Update);
-        textView.setOnClickListener(new View.OnClickListener() {
+        textViewUpdate = (TextView) findViewById(R.id.btn_Update);
+        textViewUpdate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                /*
                 Intent intent2 = new Intent(Account3.this, MainActivity.class);
                 startActivity(intent2);
                 Toast.makeText(Account3.this, "you clicked to Update", Toast.LENGTH_SHORT).show();
+                 */
+                UserInfo userInfo = new UserInfo(((TextView)findViewById(R.id.name_Account)).getText().toString(), ((TextView)findViewById(R.id.phone_Account)).getText().toString(), ((TextView)findViewById(R.id.email_Account)).getText().toString());
+                if(Connection.Companion.ChangeInfo(Account3.this, Account3.this, userInfo)){
+                    Intent intent = new Intent(Account3.this, Account.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(intent);
+                    Toast.makeText(Account3.this, "Lưu thông tin thành công", Toast.LENGTH_LONG).show();
+                }
+                else {
+                    Toast.makeText(Account3.this, "Lưu thông tin không thành công", Toast.LENGTH_LONG).show();
+                }
             }
         });
 

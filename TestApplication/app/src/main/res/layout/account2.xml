@@ -92,15 +92,15 @@
             android:id="@+id/etx_pass"
             android:inputType="textPassword"
             android:hint="Your current password"
-            android:textSize="18dp"
+            android:textSize="18sp"
             android:textColor="@android:color/black"
-            android:layout_marginLeft="25dp"/>
+            android:layout_marginStart="25dp"/>
 
     </LinearLayout>
     <LinearLayout
         android:layout_width="300dp"
         android:layout_height="wrap_content"
-        android:gravity="left"
+        android:gravity="start"
         android:background="@drawable/bg_btn"
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
@@ -121,16 +121,16 @@
             android:inputType="textPassword"
             android:id="@+id/etx_repass"
             android:hint="Your new password"
-            android:textSize="18dp"
+            android:textSize="18sp"
             android:textColor="@android:color/black"
-            android:layout_marginLeft="25dp"/>
+            android:layout_marginStart="25dp"/>
 
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="300dp"
         android:layout_height="wrap_content"
-        android:gravity="left"
+        android:gravity="start"
         android:background="@drawable/bg_btn"
         android:paddingLeft="15dp"
         android:paddingRight="15dp"
@@ -149,9 +149,9 @@
             android:id="@+id/etx_confirm"
             android:inputType="textPassword"
             android:hint="Confirm your password"
-            android:textSize="18dp"
+            android:textSize="18sp"
             android:textColor="@android:color/black"
-            android:layout_marginLeft="25dp"/>
+            android:layout_marginStart="25dp"/>
 
 
 
@@ -182,8 +182,8 @@
             android:padding="20dp"
             android:id="@+id/btn_OK"
             android:textColor="#FF3A5C"
-            android:textSize="18dp"
-            android:drawableLeft="@drawable/ic_edit"/>
+            android:textSize="18sp"
+            app:drawableStartCompat="@drawable/ic_edit" />
 
 
     </LinearLayout>

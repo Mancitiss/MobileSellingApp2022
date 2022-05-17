@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -52,6 +53,9 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                 stmt2.setString(1, new_token);
                                 stmt2.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis() + ServerMain.token_expiration_time));
                                 stmt2.executeUpdate();
+                                DOS.write(Tools.combine("0404".getBytes(StandardCharsets.UTF_16LE), new_token.getBytes(StandardCharsets.US_ASCII)));
+                                DOS.flush();
+                                System.out.println("Sent 0004 to client: "+ new_token + " " + new_token.length());
                                 break;
                             }
                         }
@@ -62,6 +66,9 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                 stmt2.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis() + ServerMain.token_expiration_time));
                                 stmt2.setString(3, oldToken);
                                 stmt2.executeUpdate();
+                                DOS.write(Tools.combine("0404".getBytes(StandardCharsets.UTF_16LE), new_token.getBytes(StandardCharsets.US_ASCII)));
+                                DOS.flush();
+                                System.out.println("Sent 0004 to client: "+ new_token + " " + new_token.length());
                                 break;
                             }
                         }
@@ -73,6 +80,9 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                 stmt2.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis() + ServerMain.token_expiration_time));
                                 stmt2.setString(3, oldToken);
                                 stmt2.executeUpdate();
+                                DOS.write(Tools.combine("0002".getBytes(StandardCharsets.UTF_16LE), new_token.getBytes(StandardCharsets.US_ASCII)));
+                                DOS.flush();
+                                System.out.println("Sent 0002 to client: "+ new_token + " " + new_token.length());
                                 break;
                             }
                         }
@@ -81,9 +91,6 @@ public class Receive_from_socket_not_logged_in implements Runnable {
             } 
             new_token = generateNewToken();
         }
-        DOS.write(Tools.combine("0002".getBytes(StandardCharsets.UTF_16LE), new_token.getBytes(StandardCharsets.US_ASCII)));
-        DOS.flush();
-        System.out.println("Sent 0002 to client: "+ new_token + " " + new_token.length());
         return new_token;
     }
 
@@ -140,7 +147,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                     // send all products without images
                     case "0005":{ 
                         String indexStr = Tools.receive_ASCII_Automatically(DIS);
-                        int index = Integer.parseInt(indexStr);
+                        //int index = Integer.parseInt(indexStr);
                         try{
                             // initialize a list of products
                             List<Product> products = new ArrayList<>();
@@ -150,9 +157,9 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                     while (rs.next()){
                                         String ID = rs.getString("ID");
                                         String filename = ID + "_1.jpg";
-                                        String filepath = ServerMain.img_path + filename;
+                                        //String filepath = ServerMain.img_path + filename;
                                         System.out.println("Reading file: " + filename);
-                                        File file = new File(filepath);
+                                        //File file = new File(filepath);
 
                                         // new file handling method
                                         String avtString = "";
@@ -197,9 +204,9 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                     while (rs.next()){
                                         String ID = rs.getString("ID");
                                         String filename = ID + "_1.jpg";
-                                        String filepath = ServerMain.img_path + filename;
+                                        //String filepath = ServerMain.img_path + filename;
                                         System.out.println("Reading file: " + filename);
-                                        File file = new File(filepath);
+                                        //File file = new File(filepath);
 
                                         // new file handling method
                                         
@@ -655,10 +662,11 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                             e.printStackTrace();
                                         }
                                         // send user infomaion to client
-                                        String[] user_info = new String[3];
+                                        String[] user_info = new String[4];
                                         user_info[0] = rs.getString("name");
-                                        user_info[1] = rs.getString("phonenumber");
-                                        user_info[2] = rs.getString("address");
+                                        user_info[1] = rs.getString("email");
+                                        user_info[2] = rs.getString("phonenumber");
+                                        user_info[3] = rs.getString("address");
                                         DOS.write(Tools.combine("0200".getBytes(StandardCharsets.UTF_16LE), Tools.data_with_unicode_byte(ServerMain.gson.toJson(user_info)).getBytes(StandardCharsets.UTF_16LE)));
                                         
                                     }
@@ -685,6 +693,150 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                             }
                         }
                     }
+                    break;
+
+                    // client wants to sign up
+                    case "0011":{
+                        String json = Tools.receive_Unicode_Automatically(DIS);
+                        SignUpInfo user = ServerMain.gson.fromJson(json, SignUpInfo.class);
+                        if (user.username != null && user.email != null && user.pw != null){
+                            // add user to database
+                            try(PreparedStatement cmd = ServerMain.sql.prepareStatement("insert into ACCOUNTS (username, pw, email, phonenumber) values (?, ?, ?, ?)");){
+                                cmd.setString(1, user.username);
+                                cmd.setString(2, user.pw);
+                                cmd.setString(3, user.email);
+                                if (user.phone != null){
+                                    cmd.setString(4, user.phone);
+                                }
+                                else cmd.setNull(4, Types.NVARCHAR);
+                                try{
+                                    if(cmd.executeUpdate() > 0){
+                                        DOS.write("0011".getBytes(StandardCharsets.UTF_16LE));
+                                    }
+                                    else {
+                                        DOS.write("0111".getBytes(StandardCharsets.UTF_16LE));
+                                    }
+                                }
+                                catch(Exception ex){
+                                    DOS.write("0111".getBytes(StandardCharsets.UTF_16LE));
+                                }
+                            } catch(Exception e){
+                                ServerMain.handleException( e.toString());
+                                e.printStackTrace();
+                                try{
+                                    DIS.close();
+                                } catch (Exception e1){
+                                }
+                                try{
+                                    DOS.close();
+                                } catch (Exception e2){
+                                }
+                                try{
+                                    client.close();
+                                } catch (Exception e3){
+                                }
+                            }
+                        }
+                    }
+                    break;
+
+                    // change password
+                    case "0013":{
+                        String opw = Tools.receive_Unicode_Automatically(DIS);
+                        String npw = Tools.receive_Unicode_Automatically(DIS);
+                        String username = Tools.receive_ASCII_Automatically(DIS);
+                        try{
+                            try(PreparedStatement cmd = ServerMain.sql.prepareStatement("select top 1 * from ACCOUNTS where username=? and pw=?");){
+                                cmd.setString(1, username);
+                                cmd.setString(2, opw);
+                                try(ResultSet rs = cmd.executeQuery();){
+                                    if (rs.next()){
+                                        // user exists, update password
+                                        try(PreparedStatement ps = ServerMain.sql.prepareStatement("UPDATE ACCOUNTS SET pw = ? WHERE username = ?")){
+                                            ps.setString(1, npw);
+                                            ps.setString(2, username);
+                                            ps.executeUpdate();
+                                        }
+                                        // send success message to client
+                                        DOS.write("0013".getBytes(StandardCharsets.UTF_16LE));
+                                    }
+                                    else{
+                                        // user doesn't exist, send error message to client
+                                        DOS.write("0014".getBytes(StandardCharsets.UTF_16LE));
+                                    }
+                                }
+                            }
+                        } catch(Exception e){
+                            ServerMain.handleException( e.toString());
+                            e.printStackTrace();
+                            try{
+                                DIS.close();
+                            } catch (Exception e1){
+                            }
+                            try{
+                                DOS.close();
+                            } catch (Exception e2){
+                            }
+                            try{
+                                client.close();
+                            } catch (Exception e3){
+                            }
+                        }
+
+                    }
+                    break;
+
+                    // change user information
+                    case "0014":{
+                        String token = Tools.receive_ASCII_Automatically(DIS);
+                        String username = Tools.receive_Unicode_Automatically(DIS);
+                        String json = Tools.receive_Unicode_Automatically(DIS);
+                        UserInfo info = ServerMain.gson.fromJson(json, UserInfo.class);
+                        // check if token and username is valid
+                        try{
+                            try(PreparedStatement cmd = ServerMain.sql.prepareStatement("select top 1 * from TOKENS where token=? and username=?");){
+                                cmd.setString(1, token);
+                                cmd.setString(2, username);
+                                try(ResultSet rs = cmd.executeQuery();){
+                                    if (rs.next()){
+                                        // token and username is valid, update user information
+                                        try(PreparedStatement ps = ServerMain.sql.prepareStatement("UPDATE ACCOUNTS SET name = ?, phonenumber = ?, email = ? WHERE username = ?")){
+                                            ps.setString(1, info.name);
+                                            ps.setString(2, info.phone);
+                                            ps.setString(3, info.email);
+                                            ps.setString(4, username);
+                                            ps.executeUpdate();
+                                        }
+                                        // send success message to client
+                                        DOS.write("0014".getBytes(StandardCharsets.UTF_16LE));
+                                    }
+                                    else{
+                                        // token and username is invalid, send error message to client
+                                        DOS.write("0114".getBytes(StandardCharsets.UTF_16LE));
+                                    }
+                                }
+                            }
+                        } catch(Exception e){
+                            ServerMain.handleException( e.toString());
+                            e.printStackTrace();
+                            try{
+                                DIS.close();
+                            } catch (Exception e1){
+                            }
+                            try{
+                                DOS.close();
+                            } catch (Exception e2){
+                            }
+                            try{
+                                client.close();
+                            } catch (Exception e3){
+                            }
+                        }
+                    }
+                    break;
+
+
+
                     default:
                     break;
                 }
