@@ -48,33 +48,32 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                 {
                     if (!rs.next()) {
                         if (oldToken == null){
-                            try(PreparedStatement stmt2 = ServerMain.sql.prepareStatement("INSERT INTO TOKEN (token, username, expirationDate) VALUES (?, NULL, ?)");)
+                            try(PreparedStatement stmt2 = ServerMain.sql.prepareStatement("INSERT INTO TOKENS (token, username, expirationDate) VALUES (?, NULL, ?)");)
                             {
                                 stmt2.setString(1, new_token);
                                 stmt2.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis() + ServerMain.token_expiration_time));
                                 stmt2.executeUpdate();
                                 DOS.write(Tools.combine("0404".getBytes(StandardCharsets.UTF_16LE), new_token.getBytes(StandardCharsets.US_ASCII)));
                                 DOS.flush();
-                                System.out.println("Sent 0004 to client: "+ new_token + " " + new_token.length());
+                                System.out.println("Sent 0404 to client: "+ new_token + " " + new_token.length());
                                 break;
                             }
                         }
                         else if (clear){
-                            try(PreparedStatement stmt2 = ServerMain.sql.prepareStatement("UPDATE TOKEN SET token = ?, username = NULL, expirationDate = ? WHERE token = ?");)
+                            try(PreparedStatement stmt2 = ServerMain.sql.prepareStatement("UPDATE TOKENS SET token = ?, username = NULL, expirationDate = ? WHERE token = ?");)
                             {
                                 stmt2.setString(1, new_token);
                                 stmt2.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis() + ServerMain.token_expiration_time));
                                 stmt2.setString(3, oldToken);
                                 stmt2.executeUpdate();
-                                DOS.write(Tools.combine("0404".getBytes(StandardCharsets.UTF_16LE), new_token.getBytes(StandardCharsets.US_ASCII)));
+                                DOS.write(Tools.combine("0004".getBytes(StandardCharsets.UTF_16LE), new_token.getBytes(StandardCharsets.US_ASCII)));
                                 DOS.flush();
                                 System.out.println("Sent 0004 to client: "+ new_token + " " + new_token.length());
                                 break;
                             }
                         }
                         else {
-                            
-                            try(PreparedStatement stmt2 = ServerMain.sql.prepareStatement("UPDATE TOKEN SET token = ?, expirationDate = ? WHERE token = ?");)
+                            try(PreparedStatement stmt2 = ServerMain.sql.prepareStatement("UPDATE TOKENS SET token = ?, expirationDate = ? WHERE token = ?");)
                             {
                                 stmt2.setString(1, new_token);
                                 stmt2.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis() + ServerMain.token_expiration_time));
@@ -632,8 +631,8 @@ public class Receive_from_socket_not_logged_in implements Runnable {
 
                     // client wants to log in
                     case "0010":{
-                        String username = Tools.receive_ASCII_Automatically(DIS);
-                        String password = Tools.receive_ASCII_Automatically(DIS);
+                        String username = Tools.receive_Unicode_Automatically(DIS);
+                        String password = Tools.receive_Unicode_Automatically(DIS);
                         try{
                             try(PreparedStatement cmd = ServerMain.sql.prepareStatement("select top 1 * from ACCOUNTS where username=? and pw=?");){
                                 cmd.setString(1, username);
@@ -668,7 +667,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                         user_info[2] = rs.getString("phonenumber");
                                         user_info[3] = rs.getString("address");
                                         DOS.write(Tools.combine("0200".getBytes(StandardCharsets.UTF_16LE), Tools.data_with_unicode_byte(ServerMain.gson.toJson(user_info)).getBytes(StandardCharsets.UTF_16LE)));
-                                        
+                                        System.out.println("Info sent to client");
                                     }
                                     else{
                                         // user doesn't exist, send error message to client

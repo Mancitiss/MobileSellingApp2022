@@ -7,9 +7,12 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -27,6 +30,23 @@ public class Account3 extends AppCompatActivity  {
     TextView textViewUpdate;
 
     @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            View v = getCurrentFocus();
+            if ( v instanceof EditText) {
+                Rect outRect = new Rect();
+                v.getGlobalVisibleRect(outRect);
+                if (!outRect.contains((int)event.getRawX(), (int)event.getRawY())) {
+                    v.clearFocus();
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                }
+            }
+        }
+        return super.dispatchTouchEvent( event );
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account3);
@@ -40,26 +60,38 @@ public class Account3 extends AppCompatActivity  {
                 //Toast.makeText(Account3.this, "quay lại", Toast.LENGTH_SHORT).show();
             }
         });
-
         textViewUpdate = (TextView) findViewById(R.id.btn_Update);
         textViewUpdate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                /*
-                Intent intent2 = new Intent(Account3.this, MainActivity.class);
-                startActivity(intent2);
-                Toast.makeText(Account3.this, "you clicked to Update", Toast.LENGTH_SHORT).show();
-                 */
-                UserInfo userInfo = new UserInfo(((TextView)findViewById(R.id.name_Account)).getText().toString(), ((TextView)findViewById(R.id.phone_Account)).getText().toString(), ((TextView)findViewById(R.id.email_Account)).getText().toString());
-                if(Connection.Companion.ChangeInfo(Account3.this, Account3.this, userInfo)){
-                    Intent intent = new Intent(Account3.this, Account.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    startActivity(intent);
-                    Toast.makeText(Account3.this, "Lưu thông tin thành công", Toast.LENGTH_LONG).show();
-                }
-                else {
-                    Toast.makeText(Account3.this, "Lưu thông tin không thành công", Toast.LENGTH_LONG).show();
-                }
+                (new Thread(){
+                    public void run(){
+                        /*
+                        Intent intent2 = new Intent(Account3.this, MainActivity.class);
+                        startActivity(intent2);
+                        Toast.makeText(Account3.this, "you clicked to Update", Toast.LENGTH_SHORT).show();
+                         */
+                        UserInfo userInfo = new UserInfo(((TextView) findViewById(R.id.name_Account)).getText().toString(), ((TextView) findViewById(R.id.phone_Account)).getText().toString(), ((TextView) findViewById(R.id.email_Account)).getText().toString());
+                        if (Connection.Companion.ChangeInfo(Account3.this, Account3.this, userInfo)) {
+                            runOnUiThread(new Runnable(){
+                                @Override
+                                public void run() {
+                                    Intent intent = new Intent(Account3.this, Account.class);
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                    startActivity(intent);
+                                    Toast.makeText(Account3.this, "Lưu thông tin thành công", Toast.LENGTH_LONG).show();
+                                }
+                            });
+                        } else {
+                            runOnUiThread(new Runnable(){
+                                @Override
+                                public void run(){
+                                    Toast.makeText(Account3.this, "Lưu thông tin không thành công", Toast.LENGTH_LONG).show();
+                                }
+                            });
+                        }
+                    }
+                }).start();
             }
         });
 

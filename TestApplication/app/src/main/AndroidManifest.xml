@@ -31,6 +31,7 @@
         <activity android:name=".PaymentMainActivity3"/>
         <activity android:name=".PaymentMainActivity4"/>
         <activity android:name=".Login"/>
+        <activity android:name=".SignUp"/>
     </application>
 
 </manifest>

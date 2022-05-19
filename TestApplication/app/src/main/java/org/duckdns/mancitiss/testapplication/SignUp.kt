@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.text.TextUtils
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_sign_up.*
+import kotlin.concurrent.thread
 
 class SignUp : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,34 +18,41 @@ class SignUp : AppCompatActivity() {
         }
 
         buttonSignUp.setOnClickListener{
-            val email = editTextEmail.text.toString()
-            val username = editTextUsername2.text.toString()
-            val pw = editTextPassword2.text.toString()
-            val rpw = editTextConfirmPassword.text.toString()
+            thread {
+                val email = editTextEmail.text.toString()
+                val username = editTextUsername2.text.toString()
+                val pw = editTextPassword2.text.toString()
+                val rpw = editTextConfirmPassword.text.toString()
 
-            if (email.isNotBlank() && username.isNotBlank() && pw.isNotBlank() && rpw.isNotBlank() && email.isEmailValid() && pw == rpw){
-                if (Connection.SignUp(this, this, username, email, pw)){
-                    if (Connection.LogIn(this, this, username, pw)){
-                        // display account activity, finish this
-                        val intent = Intent(this@SignUp, Account::class.java)
-                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                        startActivity(intent)
-                        finish()
+                if (email.isNotBlank() && username.isNotBlank() && pw.isNotBlank() && rpw.isNotBlank() && email.isEmailValid() && pw == rpw) {
+                    if (Connection.SignUp(this, this, username, email, pw)) {
+                        if (Connection.LogIn(this, this, username, pw)) {
+                            // display account activity, finish this
+                            runOnUiThread {
+                                val intent = Intent(this@SignUp, Account::class.java)
+                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                startActivity(intent)
+                                finish()
+                            }
+                        } else {
+                            // display login activity, finish this
+                            runOnUiThread {
+                                val intent = Intent(this@SignUp, Login::class.java)
+                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                startActivity(intent)
+                                finish()
+                            }
+                        }
+                    } else {
+                        runOnUiThread {
+                            // inform user username/password may be wrong
+                        }
                     }
-                    else {
-                        // display login activity, finish this
-                        val intent = Intent(this@SignUp, Login::class.java)
-                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                        startActivity(intent)
-                        finish()
+                } else {
+                    runOnUiThread {
+                        // inform user to re-check all information
                     }
                 }
-                else {
-                    // inform user username/password may be wrong
-                }
-            }
-            else {
-                // inform user to re-check all information
             }
         }
     }

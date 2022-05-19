@@ -14,18 +14,19 @@
             android:id="@+id/backAccount"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
             android:src="@drawable/ic_arrow_back" />
         <TextView
             android:layout_weight="1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="Account setting"
-            android:textSize="16dp"
+            android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@android:color/black"
             android:gravity="center"/>
         <TextView
+            android:id="@+id/logoutAccount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Logout"

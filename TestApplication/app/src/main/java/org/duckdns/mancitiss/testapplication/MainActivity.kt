@@ -1,10 +1,14 @@
 package org.duckdns.mancitiss.testapplication
 
-import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
@@ -17,7 +21,6 @@ import org.duckdns.mancitiss.testapplication.adapter.FoodAdapter
 import org.duckdns.mancitiss.testapplication.entities.Categories
 import org.duckdns.mancitiss.testapplication.entities.Foods
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
 
 
@@ -35,6 +38,24 @@ class MainActivity : AppCompatActivity() {
         private var newArray: ArrayList<Foods> = ArrayList<Foods>()
         private var recommendedArray: ArrayList<Foods> = ArrayList<Foods>()
     }
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        if (event.action == MotionEvent.ACTION_DOWN) {
+            val v = currentFocus
+            if (v is EditText) {
+                val outRect = Rect()
+                v.getGlobalVisibleRect(outRect)
+                if (!outRect.contains(event.rawX.toInt(), event.rawY.toInt())) {
+                    v.clearFocus()
+                    val imm: InputMethodManager =
+                        getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0)
+                }
+            }
+        }
+        return super.dispatchTouchEvent(event)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val model = Models.getInstance()
@@ -86,6 +107,10 @@ class MainActivity : AppCompatActivity() {
                     recommendedFoodAdapter.notifyDataSetChanged()
                 }
             }
+        }
+
+        btn_menu.setOnClickListener{
+            openMenu(it)
         }
 
         btn_noti.setOnClickListener {
@@ -140,12 +165,18 @@ class MainActivity : AppCompatActivity() {
             }
             getString(R.string.navigation_label_account)->{
                 Log.d("Connecting", "account clicked")
-                if (Connection.isLoggedIn(this, this)) {
-                    Log.d("Connecting", "Account starting")
-                    startActivity(Intent(this, Account::class.java))
-                } else {
-                    Log.d("Connecting", "Login starting")
-                    startActivity(Intent(this, Login::class.java))
+                thread {
+                    if (Connection.isLoggedIn(this, this)) {
+                        Log.d("Connecting", "Account starting")
+                        runOnUiThread {
+                            startActivity(Intent(this, Account::class.java))
+                        }
+                    } else {
+                        Log.d("Connecting", "Login starting")
+                        runOnUiThread {
+                            startActivity(Intent(this, Login::class.java))
+                        }
+                    }
                 }
             }
         }
