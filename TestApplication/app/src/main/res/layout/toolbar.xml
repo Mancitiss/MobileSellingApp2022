@@ -3,12 +3,13 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">
+
     <LinearLayout
+        android:id="@+id/linear_ll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/linear_ll"
-        android:padding="10dp"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="10dp">
 
         <ImageView
             android:id="@+id/backAccount"
@@ -16,32 +17,35 @@
             android:layout_height="30dp"
             android:layout_alignParentStart="true"
             android:src="@drawable/ic_arrow_back" />
+
         <TextView
-            android:layout_weight="1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
             android:text="Account setting"
-            android:textSize="16sp"
-            android:textStyle="bold"
             android:textColor="@android:color/black"
-            android:gravity="center"/>
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
         <TextView
             android:id="@+id/logoutAccount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
             android:text="Logout"
             android:textColor="#FF3A5C"
-            android:layout_alignParentRight="true"
-            android:textStyle="normal"
-            android:textSize="15dp"/>
+            android:textSize="15dp"
+            android:textStyle="normal" />
 
     </LinearLayout>
+
     <View
         android:layout_width="match_parent"
         android:layout_height="0.5dp"
-        android:background="#FF3A5C"
         android:layout_below="@id/linear_ll"
-        android:paddingRight="8dp"
-        android:paddingLeft="8dp"/>
+        android:background="#FF3A5C"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp" />
 
 </RelativeLayout>
