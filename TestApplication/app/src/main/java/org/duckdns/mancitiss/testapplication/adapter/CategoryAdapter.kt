@@ -6,11 +6,14 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import org.duckdns.mancitiss.testapplication.entities.Categories
 import kotlinx.android.synthetic.main.item_category.view.*
+import org.duckdns.mancitiss.testapplication.MainActivity
 import org.duckdns.mancitiss.testapplication.R
 
 class CategoryAdapter: RecyclerView.Adapter<CategoryAdapter.RecyclerViewHolder>(){
 
     private var arrCategory = ArrayList<Categories>()
+
+    lateinit var activity: MainActivity
 
     class RecyclerViewHolder(view:View):RecyclerView.ViewHolder(view){
 

@@ -83,3 +83,7 @@ lint/generated/
 lint/outputs/
 lint/tmp/
 # lint/reports/
+TestApplication/gradle/wrapper/gradle-wrapper.jar
+TestApplication/.idea/gradle.xml
+TestApplication/app/build.gradle
+TestApplication/app/build.gradle

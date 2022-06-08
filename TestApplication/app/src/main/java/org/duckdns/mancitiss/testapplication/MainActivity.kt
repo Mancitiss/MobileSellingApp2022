@@ -25,7 +25,7 @@ import kotlin.concurrent.thread
 
 
 class MainActivity : AppCompatActivity() {
-    companion object{
+    //companion object {
 
         private var arrCategory = ArrayList<Categories>()
         private var categoryAdapter = CategoryAdapter()
@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
 
         private var newArray: ArrayList<Foods> = ArrayList<Foods>()
         private var recommendedArray: ArrayList<Foods> = ArrayList<Foods>()
-    }
+    //}
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_DOWN) {
@@ -59,6 +59,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val model = Models.getInstance()
+        newestFoodAdapter.mContext = this
+        recommendedFoodAdapter.mContext = this
+        categoryAdapter.activity = this
 
         setContentView(R.layout.activity_main)
         arrCategory.add(Categories(1,"Tất cả", R.drawable.food))
@@ -139,9 +142,6 @@ class MainActivity : AppCompatActivity() {
         findViewById<DrawerLayout>(R.id.main_drawer_layout).openDrawer(GravityCompat.START)
     }
 
-    fun reload(){
-    }
-
     fun load(index: Long = 0){
         Connection.load(this, this, index)
         arrRecommendedFood = ArrayList(arrNewestFood)
@@ -189,5 +189,32 @@ class MainActivity : AppCompatActivity() {
 
     fun openNotification(view: View) {
         startActivity(Intent(this, ReceiptActivity::class.java))
+    }
+
+    fun categorize(category: String){
+        if (category != "Tất cả") {
+            newArray = ArrayList<Foods>()
+            recommendedArray = ArrayList<Foods>()
+            for (food: Foods in arrNewestFood) {
+                if (food.product.category == category) newArray.add(food)
+            }
+            for (food: Foods in arrRecommendedFood) {
+                if (food.product.category == category) recommendedArray.add(food)
+            }
+            newestFoodAdapter.setData(newArray)
+            recommendedFoodAdapter.setData(recommendedArray)
+            runOnUiThread {
+                newestFoodAdapter.notifyDataSetChanged()
+                recommendedFoodAdapter.notifyDataSetChanged()
+            }
+        }
+        else {
+            newestFoodAdapter.setData(arrNewestFood)
+            recommendedFoodAdapter.setData(arrRecommendedFood)
+            runOnUiThread {
+                newestFoodAdapter.notifyDataSetChanged()
+                recommendedFoodAdapter.notifyDataSetChanged()
+            }
+        }
     }
 }

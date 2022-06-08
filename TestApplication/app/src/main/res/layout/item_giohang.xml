@@ -17,7 +17,7 @@
 
             android:id="@+id/item_giohang_image"
             android:layout_width="100dp"
-            android:layout_height="78dp"
+            android:layout_height="100dp"
             android:scaleType="centerCrop"
             tools:srcCompat="@tools:sample/avatars" />
 
@@ -26,15 +26,31 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/item_giohang_tensp"
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="10dp"
-                android:text="Tên sản phẩm"
-                android:textColor="@color/black"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                >
+                <TextView
+                    android:id="@+id/item_giohang_tensp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="60dp"
+                    android:layout_margin="10dp"
+                    android:text="Tên sản phẩm"
+                    android:textColor="@color/black"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/item_giohang_icon_remove"
+                    />
+                <ImageView
+                    android:id="@+id/item_giohang_icon_remove"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:srcCompat="@android:drawable/ic_delete"/>
+            </androidx.constraintlayout.widget.ConstraintLayout>
             <LinearLayout
                 android:weightSum="18"
                 android:layout_marginTop="2dp"

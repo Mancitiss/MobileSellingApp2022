@@ -11,12 +11,14 @@ import androidx.recyclerview.widget.RecyclerView
 import org.duckdns.mancitiss.testapplication.R
 import org.duckdns.mancitiss.testapplication.entities.Foods
 import kotlinx.android.synthetic.main.item_food.view.*
+import org.duckdns.mancitiss.testapplication.MainActivity
+import org.duckdns.mancitiss.testapplication.Models
 import org.duckdns.mancitiss.testapplication.ViewProduct
 
 class FoodAdapter: RecyclerView.Adapter<FoodAdapter.RecyclerViewHolder>(){
 
     private var arrFood = ArrayList<Foods>()
-    private lateinit var mContext:Context
+    lateinit var mContext:Context
 
     class RecyclerViewHolder(view:View):RecyclerView.ViewHolder(view){
 
@@ -42,10 +44,11 @@ class FoodAdapter: RecyclerView.Adapter<FoodAdapter.RecyclerViewHolder>(){
     }
 
     private fun onClickGoToViewProduct(food: Foods) {
-        var intent:Intent = Intent(this.mContext, ViewProduct::class.java)
-        var bundle: Bundle = Bundle()
-        bundle.putSerializable("object_food", food)
-        intent.putExtras(bundle)
+        Models.getInstance().currentFood = food;
+        var intent:Intent = Intent(mContext, ViewProduct::class.java)
+        //var bundle: Bundle = Bundle()
+        //bundle.putSerializable("object_food", food)
+        //intent.putExtras(bundle)
         mContext.startActivity(intent)
     }
 

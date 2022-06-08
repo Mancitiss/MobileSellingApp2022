@@ -1,9 +1,9 @@
 package org.duckdns.mancitiss.testapplication
 
 import android.graphics.Bitmap
-import java.math.BigDecimal
+import java.io.Serializable
 
-class Product {
+class Product () : Serializable{
     var name: String = ""
     var price: Long = 0
     var category: String = ""
@@ -19,15 +19,15 @@ class Product {
     var avatar: String = ""
     var image: Bitmap? = null
 
-    fun Product() {}
+    //constructor() : this() {}
 
-    fun Product(
+    constructor(
         id: String,
         name: String,
         category: String,
         price: Long,
         quantity: Int
-    ) {
+    ) : this() {
         this.id = id
         this.name = name
         this.category = category

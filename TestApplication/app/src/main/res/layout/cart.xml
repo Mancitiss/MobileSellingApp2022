@@ -21,7 +21,7 @@
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:background="?attr/colorPrimary"
+        android:background="@color/orange"
         android:minHeight="?attr/actionBarSize"
         android:theme="?attr/actionBarTheme"
         app:layout_constraintTop_toTopOf="parent"
@@ -33,9 +33,23 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_margin="2dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/layout1"
         app:layout_constraintTop_toBottomOf="@+id/toolbar"
         tools:layout_editor_absoluteX="2dp" />
+
+    <Button
+        android:id="@+id/buttonmuahangback"
+        android:layout_margin="10dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Quay lại"
+        android:textColor="@color/white"
+        app:backgroundTint="@color/lightGrey"
+        app:layout_constraintBottom_toTopOf="@id/buttonmuahang"
+        tools:layout_editor_absoluteX="317dp" />
+
     <Button
         android:id="@+id/buttonmuahang"
         android:layout_margin="10dp"
@@ -44,6 +58,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Mua hàng"
+        android:textColor="@color/white"
+        app:backgroundTint="@color/orange"
         app:layout_constraintBottom_toBottomOf="parent"
         tools:layout_editor_absoluteX="317dp" />
 
@@ -54,7 +70,7 @@
         android:orientation="horizontal"
         android:weightSum="2"
         android:layout_margin="10dp"
-        app:layout_constraintBottom_toTopOf="@id/buttonmuahang">
+        app:layout_constraintBottom_toTopOf="@id/buttonmuahangback">
 
         <TextView
             android:id="@+id/textView"
