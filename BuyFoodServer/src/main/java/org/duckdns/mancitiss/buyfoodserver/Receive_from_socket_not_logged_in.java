@@ -12,6 +12,9 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLSocket;
 
@@ -268,7 +271,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                     // claim products
                     case "2610":{
                         try{
-                            String token = Tools.receive_unicode(DIS, 32);
+                            String token = Tools.receive_ASCII(DIS, 32);
                             if (Tools.isTokenRegistered(token)){ 
                                 Boolean success = true;
                                 String json = Tools.receive_Unicode_Automatically(DIS);
@@ -276,19 +279,24 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                 // insert the order into database
                                 try(PreparedStatement ps = ServerMain.sql.prepareStatement("INSERT INTO ORDERS (ID, username, length, total, status, address, receiver, contactNumber) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")){
                                     // create new random long and convert it to string with "OR" at the beginning
-                                    String newID = "OR" + ServerMain.rand.nextLong();
+                                    String newIdnum = ""+ServerMain.rand.nextLong();
+                                    while (newIdnum.length() < 19) newIdnum = "0" + newIdnum;
+                                    String newId = "OR" + newIdnum;
                                     // check if newID exists in database
                                     while (true){
                                         try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("SELECT TOP 1 * FROM ORDERS WHERE ID = ?")){
-                                            ps2.setString(1, newID);
+                                            ps2.setString(1, newId);
                                             try(ResultSet rs = ps2.executeQuery();){
                                                 if (!rs.next()){
                                                     break;
                                                 }
                                             }
                                         }
-                                        newID = "OR" + ServerMain.rand.nextLong();
+                                        newIdnum = ""+ServerMain.rand.nextLong();
+                                        while (newIdnum.length() < 19) newIdnum = "0" + newIdnum;
+                                        newId = "OR" + newIdnum;
                                     }
+                                    final String newID = newId;
                                     ps.setString(1, newID);
                                     boolean anonymous = true;
                                     String username = "";
@@ -312,7 +320,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                         }
                                     }
                                     ps.setInt(3, newOrder.items.size());
-                                    BigDecimal total = new BigDecimal(0);
+                                    long total = 0;
                                     int index = 0;
                                     List<String> productIDs = new ArrayList<>();
                                     for (String key : newOrder.items.keySet()){
@@ -334,15 +342,15 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                                         }
                                                     }
                                                     if (update){
-                                                        BigDecimal subtotal = rs.getBigDecimal("price").multiply(new BigDecimal(newOrder.items.get(key)));
-                                                        total = total.add(subtotal);
+                                                        Long subtotal = rs.getLong("price")*newOrder.items.get(key);
+                                                        total += subtotal;
                                                         // insert order detail into ORDER_DETAILS table
                                                         try(PreparedStatement ps3 = ServerMain.sql.prepareStatement("INSERT INTO ORDER_DETAILS (orderID, [index], productID, count, subTotal, status) VALUES (?, ?, ?, ?, ?, ?)")){
                                                             ps3.setString(1, newID);
                                                             ps3.setInt(2, index);
                                                             ps3.setString(3, key);
                                                             ps3.setInt(4, newOrder.items.get(key));
-                                                            ps3.setBigDecimal(5, subtotal);
+                                                            ps3.setLong(5, subtotal);
                                                             ps3.setString(6, "Pending");
                                                             ps3.executeUpdate();
                                                         }
@@ -374,7 +382,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                         DOS.write("2612".getBytes(StandardCharsets.UTF_16LE));
                                         throw new Exception("Failed to create order");
                                     }
-                                    ps.setBigDecimal(4, total);
+                                    ps.setLong(4, total);
                                     ps.setString(5, "Pending");
                                     ps.setNString(6, newOrder.address);
                                     ps.setNString(7, newOrder.name);
@@ -413,14 +421,43 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                             }
                                         }
                                     }
-                                    catch(Exception e){                                    }
+                                    catch(Exception e){
+                                        e.printStackTrace();
+                                    }
                                     if (ps.executeUpdate() > 0){
+                                        Timer timer = new Timer();
+                                        TimerTask timerTask = new TimerTask(){
+                                            @Override
+                                            public void run(){
+                                                try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("UPDATE ORDER_DETAILS SET status = ? WHERE orderID = ?")){
+                                                    ps2.setString(1, "Delivered");
+                                                    ps2.setString(2, newID);
+                                                    ps2.executeUpdate();
+                                                }
+                                                catch(Exception e){
+                                                    e.printStackTrace();
+                                                }
+                                                try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("UPDATE ORDERS SET status = ? WHERE ID = ?")){
+                                                    ps2.setString(1, "Delivered");
+                                                    ps2.setString(2, newID);
+                                                    ps2.executeUpdate();
+                                                }
+                                                catch(Exception e){
+                                                    e.printStackTrace();
+                                                }
+                                            }
+                                        };
+                                        timer.schedule(timerTask, 1000*60*5);
                                         DOS.write(Tools.combine("2611".getBytes(StandardCharsets.UTF_16LE), (newID).getBytes(StandardCharsets.US_ASCII)));
+                                        
                                     }
                                 }
                                 catch (Exception e){
                                     e.printStackTrace();
                                 }
+                            }
+                            else{
+                                System.out.println("session doesn't exist");
                             }
                         }
                         catch (Exception e){
@@ -574,7 +611,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                         }
                     }
                     break;
-                    // client has token and want to confirm token is valid
+                    // client has token and wants to confirm token is valid
                     case "0001": {
                         data = Tools.receive_ASCII(DIS, 32);
                         System.out.println(data);

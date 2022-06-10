@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PushbackInputStream;
 import java.nio.charset.StandardCharsets;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Base64;
@@ -378,7 +379,7 @@ public class Tools {
             boolean result = false;
             try(PreparedStatement ps = ServerMain.sql.prepareStatement("SELECT * from TOKENS where token = ? and expirationDate > ?")){
                 ps.setString(1, token);
-                ps.setLong(2, System.currentTimeMillis());
+                ps.setDate(2, new Date(System.currentTimeMillis()));
                 try(ResultSet rs = ps.executeQuery()){
                     if (rs.next()){
                         result = true;

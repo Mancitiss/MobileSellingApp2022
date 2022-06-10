@@ -86,41 +86,44 @@ public class CartActivity extends AppCompatActivity {
                 Button back = findViewById(R.id.infoBackButton);
                 AppCompatActivity activity = CartActivity.this;
                 Context context = CartActivity.this;
-                (new Thread(() -> {
-                    Connection.Companion.isLoggedIn(activity, context);
-                    runOnUiThread(() -> {
-                        name.setText(sharedPreference.getString("name", ""));
-                        phone.setText(sharedPreference.getString("phone", ""));
-                        address.setText(sharedPreference.getString("address", ""));
-                        choosePayment.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                // check if name or phone or address is empty
-                                if (name.getText().toString().isEmpty() || phone.getText().toString().isEmpty() || address.getText().toString().isEmpty()){
-                                    name.setError("Không được để trống");
-                                    phone.setError("Không được để trống");
-                                    address.setError("Không được để trống");
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Connection.Companion.isLoggedIn(activity, context);
+                        runOnUiThread(() -> {
+                            name.setText(sharedPreference.getString("name", ""));
+                            phone.setText(sharedPreference.getString("phone", ""));
+                            address.setText(sharedPreference.getString("address", ""));
+                            choosePayment.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    // check if name or phone or address is empty
+                                    if (name.getText().toString().isEmpty() || phone.getText().toString().isEmpty() || address.getText().toString().isEmpty()) {
+                                        name.setError("Không được để trống");
+                                        phone.setError("Không được để trống");
+                                        address.setError("Không được để trống");
+                                    } else {
+                                        Models.getInstance().currentname = name.getText().toString();
+                                        Models.getInstance().currentphone = phone.getText().toString();
+                                        Models.getInstance().currentaddress = address.getText().toString();
+                                        Intent intent = new Intent(CartActivity.this, PaymentMainActivity.class);
+                                        startActivity(intent);
+                                        //finish();
+                                    }
                                 }
-                                else {
-                                    Models.getInstance().currentname = name.getText().toString();
-                                    Models.getInstance().currentphone = phone.getText().toString();
-                                    Models.getInstance().currentaddress = address.getText().toString();
-                                    Intent intent = new Intent(CartActivity.this, PaymentMainActivity.class);
-                                    startActivity(intent);
-                                    finish();
+                            });
+                            back.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    setContentView(R.layout.cart);
+                                    initView();
+                                    initControl();
                                 }
-                            }
+                            });
                         });
-                        back.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                setContentView(R.layout.cart);
-                                initView();
-                                initControl();
-                            }
-                        });
-                    });
-                })).run();
+                    }
+                });
+                thread.start();
             }
         });
     }

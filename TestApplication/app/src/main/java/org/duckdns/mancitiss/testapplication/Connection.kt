@@ -136,7 +136,7 @@ class Connection{
 
                             editor.putString("token", newToken)
                             editor.commit()
-                            Log.d("connecting", "new token received")
+                            Log.d("connecting", "new token received: " + pref.getString("token", ""))
                         }
                         "0004"->{
                             newToken = Tools.receiveASCII(DIS, 32)
@@ -383,6 +383,56 @@ class Connection{
             }
             catch(e: Exception){
                 Log.d("connecting", e.stackTraceToString())
+            }
+        }
+
+        fun CheckVisa(activity: Activity, context: Context, visa: String, CVV: String): Boolean{
+            // check if visa and CVV are numbers
+            if(visa.matches("[0-9]+".toRegex()) && CVV.matches("[0-9]+".toRegex())){
+                return true
+            }
+            return false
+        }
+
+        fun PlaceOrderWithAccount(activity: Activity, context: Context): Boolean{
+            try {
+                Log.d("connecting", "starting to place order")
+                val pref: SharedPreferences =
+                    activity.getSharedPreferences("preferences", Context.MODE_PRIVATE)
+                val token = pref.getString("token", "00000000000000000000000000000000")
+                val ssf: SSLSocketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
+                (ssf.createSocket(
+                    context.getString(R.string.serverAddress),
+                    context.resources.getInteger(R.integer.port)
+                ) as SSLSocket).use {
+                    val DOS = DataOutputStream(it.getOutputStream())
+                    val DIS = DataInputStream(it.getInputStream())
+                    val order: Order = Order()
+                    order.name = Models.getInstance().currentname
+                    order.phoneNumber = Models.getInstance().currentphone
+                    order.address = Models.getInstance().currentaddress
+                    order.items = Models.getInstance().shoppingCart
+                    val gson = Gson()
+                    val json = gson.toJson(order, Order::class.java)
+                    Log.d("connecting", json)
+                    DOS.write(Tools.combine("2610".toByteArray(StandardCharsets.UTF_16LE), token!!.toByteArray(StandardCharsets.US_ASCII), Tools.data_with_unicode_byte(json).toByteArray(StandardCharsets.UTF_16LE)))
+                    when(val instruction = Tools.receive_unicode(DIS, 8)){
+                        "2611"->{
+                            val id = Tools.receiveASCII(DIS, 21)
+                            Log.d("connecting", "order placed" + id)
+                            Models.getInstance().notifications.add(id);
+                            return true
+                        }
+                        else -> {
+                            Log.d("connecting", "order not placed")
+                            return false
+                        }
+                    }
+                }
+            }
+            catch(e: Exception){
+                Log.d("connecting", e.stackTraceToString())
+                return false
             }
         }
     }
