@@ -64,11 +64,11 @@ class MainActivity : AppCompatActivity() {
         categoryAdapter.activity = this
 
         setContentView(R.layout.activity_main)
-        arrCategory.add(Categories(1,"Tất cả", R.drawable.food))
-        arrCategory.add(Categories(2,"Món ăn", R.drawable.drink))
-        arrCategory.add(Categories(3,"Thức uống", R.drawable.chicken))
-        arrCategory.add(Categories(4,"Gà rán", R.drawable.hamberger))
-        arrCategory.add(Categories(5,"Thức ăn nhanh", R.drawable.noodle))
+        arrCategory.add(Categories(1,"Tất cả", R.drawable.noodle))
+        arrCategory.add(Categories(2,"Món ăn", R.drawable.food))
+        arrCategory.add(Categories(3,"Thức uống", R.drawable.drink))
+        arrCategory.add(Categories(4,"Gà rán", R.drawable.chicken))
+        arrCategory.add(Categories(5,"Thức ăn nhanh", R.drawable.hamberger))
         arrCategory.add(Categories(6,"Bánh ngọt", R.drawable.cake))
 
         categoryAdapter.setData(arrCategory)

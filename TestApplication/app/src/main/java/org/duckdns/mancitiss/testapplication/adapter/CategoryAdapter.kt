@@ -30,6 +30,9 @@ class CategoryAdapter: RecyclerView.Adapter<CategoryAdapter.RecyclerViewHolder>(
     override fun onBindViewHolder(holder: RecyclerViewHolder, position: Int) {
         holder.itemView.tv_cateName.text = arrCategory[position].name
         holder.itemView.img_category.setImageResource(arrCategory[position].img)
+        holder.itemView.setOnClickListener {
+            activity.categorize(arrCategory[position].name)
+        }
     }
 
     override fun getItemCount(): Int {

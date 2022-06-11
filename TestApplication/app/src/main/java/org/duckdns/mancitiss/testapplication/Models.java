@@ -15,7 +15,7 @@ public class Models{
 
         private ConcurrentHashMap<String, Product> knownProducts;
         private ConcurrentHashMap<String, Integer> shoppingCart;
-        private List<String> notifications;
+        private ConcurrentHashMap<String, DonHang> knownOrders;
         public Foods currentFood;
 
         public String currentname;
@@ -41,7 +41,7 @@ public class Models{
                  */
                 knownProducts = new ConcurrentHashMap<String, Product>();
                 shoppingCart = new ConcurrentHashMap<String, Integer>();
-                notifications = new ArrayList<String>();
+                knownOrders = new ConcurrentHashMap<String, DonHang>();
                 isInitialized = true;
             }
         }
@@ -52,8 +52,9 @@ public class Models{
         public ConcurrentHashMap<String, Integer> getShoppingCart(){
             return shoppingCart;
         }
-        public List<String> getNotifications(){
-            return notifications;
+        public ConcurrentHashMap<String, DonHang> getKnownOrders(){
+            return knownOrders;
         }
+
 
 }

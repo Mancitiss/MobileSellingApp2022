@@ -448,7 +448,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                             }
                                         };
                                         timer.schedule(timerTask, 1000*60*5);
-                                        DOS.write(Tools.combine("2611".getBytes(StandardCharsets.UTF_16LE), (newID).getBytes(StandardCharsets.US_ASCII)));
+                                        DOS.write(Tools.combine("2611".getBytes(StandardCharsets.UTF_16LE), (newID).getBytes(StandardCharsets.US_ASCII), Tools.data_with_ASCII_byte(Long.toString(total)).getBytes(StandardCharsets.US_ASCII)));
                                         
                                     }
                                 }
@@ -560,6 +560,54 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                 ps.setInt(1, length);
                                 ps.setString(2, orderID);
                                 ps.executeUpdate();
+                            }
+                        }
+                        catch (Exception e){
+                            ServerMain.handleException( e.toString());
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+
+                    case "6969":{
+                        String token = Tools.receive_ASCII(DIS, 32);
+                        // check if token is valid
+                        try(PreparedStatement ps = ServerMain.sql.prepareStatement("SELECT TOP 1 * FROM TOKENS WHERE token = ?")){
+                            ps.setString(1, token);
+                            try(ResultSet rs = ps.executeQuery();){
+                                if (rs.next()){
+                                    // token is valid
+                                    String username = rs.getNString("username");
+                                    // get all orders for user
+                                    List<ExistedOrder> orders = new ArrayList<>();
+                                    try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("SELECT * FROM ORDERS WHERE username = ?")){
+                                        ps2.setString(1, username);
+                                        try(ResultSet rs2 = ps2.executeQuery();){
+                                            while (rs2.next()){
+                                                String orderID = rs2.getString("ID");
+                                                String name = rs2.getNString("receiver");
+                                                String address = rs2.getNString("address");
+                                                String phone = rs2.getNString("contactNumber");
+                                                long total = rs2.getLong("total");
+                                                List<ExistedItem> items = new ArrayList<>();
+                                                try(PreparedStatement ps3 = ServerMain.sql.prepareStatement("SELECT * FROM ORDER_DETAILS WHERE orderID = ?")){
+                                                    ps3.setString(1, orderID);
+                                                    try(ResultSet rs3 = ps3.executeQuery();){
+                                                        while (rs3.next()){
+                                                            ExistedItem item = new ExistedItem(rs3.getString("productID"), rs3.getInt("count"), rs3.getNString("status"));
+                                                            items.add(item);
+                                                        }
+                                                    }
+                                                }
+                                                ExistedOrder order = new ExistedOrder(orderID, name, phone, address, total, items);
+                                                orders.add(order);
+                                            }
+                                        }
+                                    }
+                                    // send orders to client
+                                    String ordersJSON = ServerMain.gson.toJson(orders);
+                                    DOS.write(Tools.combine("6969".getBytes(StandardCharsets.UTF_16LE), Tools.data_with_unicode_byte(ordersJSON).getBytes(StandardCharsets.UTF_16LE)));
+                                }
                             }
                         }
                         catch (Exception e){

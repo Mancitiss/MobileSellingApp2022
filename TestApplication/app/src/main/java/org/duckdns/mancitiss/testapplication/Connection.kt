@@ -419,8 +419,14 @@ class Connection{
                     when(val instruction = Tools.receive_unicode(DIS, 8)){
                         "2611"->{
                             val id = Tools.receiveASCII(DIS, 21)
+                            val total = Tools.receive_ASCII_Automatically(DIS).toLong()
                             Log.d("connecting", "order placed" + id)
-                            Models.getInstance().notifications.add(id);
+                            val itemList = ArrayList<Item>()
+                            for(i in Models.getInstance().shoppingCart){
+                                itemList.add(Item(i.key, i.value, "Đang chờ xử lý"))
+                            }
+                            val donHang = DonHang(id, order.address, order.phoneNumber, order.name, total, itemList.toArray(arrayOf<Item>()))
+                            Models.getInstance().knownOrders[id] = donHang
                             return true
                         }
                         else -> {
@@ -433,6 +439,36 @@ class Connection{
             catch(e: Exception){
                 Log.d("connecting", e.stackTraceToString())
                 return false
+            }
+        }
+
+        fun getKnownOrders(activity:Activity, context: Context){
+            Log.d("connecting", "starting to place order")
+            val pref: SharedPreferences =
+                activity.getSharedPreferences("preferences", Context.MODE_PRIVATE)
+            val token = pref.getString("token", "00000000000000000000000000000000")
+            val ssf: SSLSocketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
+            (ssf.createSocket(
+                context.getString(R.string.serverAddress),
+                context.resources.getInteger(R.integer.port)
+            ) as SSLSocket).use {
+                val DOS = DataOutputStream(it.getOutputStream())
+                val DIS = DataInputStream(it.getInputStream())
+                DOS.write(Tools.combine("6969".toByteArray(StandardCharsets.UTF_16LE), token!!.toByteArray(StandardCharsets.US_ASCII)))
+                when (val instruction = Tools.receive_unicode(DIS, 8)) {
+                    "6969" -> {
+                        val json = Tools.receive_Unicode_Automatically(DIS)
+                        Log.d("connecting", json)
+                        val orderList = Gson().fromJson(json, Array<DonHang>::class.java)
+                        for (i in orderList) {
+                            Models.getInstance().knownOrders[i.id] = i
+                            Log.d("connecting", i.getItemList().get(0).idsp)
+                        }
+                    }
+                    else -> {
+                        Log.d("connecting", "unknown error in get known orders")
+                    }
+                }
             }
         }
     }

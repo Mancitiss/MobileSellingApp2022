@@ -21,8 +21,21 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_margin="2dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/notificationBackButton"
         app:layout_constraintTop_toBottomOf="@+id/toolbar2"
         tools:layout_editor_absoluteX="2dp"
         />
+
+    <Button
+        android:id="@+id/notificationBackButton"
+        android:layout_margin="10dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Quay lại"
+        android:textColor="@color/white"
+        app:backgroundTint="@color/orange"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:layout_editor_absoluteX="317dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -37,6 +37,12 @@ public class ChiTietAdapter extends RecyclerView.Adapter<ChiTietAdapter.MyViewHo
         holder.txtgiatien.setText("Giá tiền: "+item.getGia());
         holder.txttinhtrang.setText("Tình trạng: "+item.getTinhtrang());
         //Load hình ảnh.
+        if (item.getHinhanh() != null) {
+            holder.imagechitiet.setImageBitmap(item.getHinhanh());
+        }
+        else {
+            holder.imagechitiet.setImageResource(R.drawable.food);
+        }
     }
 
     @Override

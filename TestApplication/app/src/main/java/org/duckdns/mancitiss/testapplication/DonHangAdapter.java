@@ -15,11 +15,11 @@ import java.util.List;
 
 public class DonHangAdapter extends RecyclerView.Adapter<DonHangAdapter.MyViewHolder> {
     private RecyclerView.RecycledViewPool viewPool = new RecyclerView.RecycledViewPool();
-    List<DonHang> listdonghang;
+    List<DonHang> listdonhang;
     Context context;
 
-    public DonHangAdapter(List<DonHang> listdonghang, Context context) {
-        this.listdonghang = listdonghang;
+    public DonHangAdapter(List<DonHang> listdonhang, Context context) {
+        this.listdonhang = listdonhang;
         this.context = context;
     }
 
@@ -32,10 +32,10 @@ public class DonHangAdapter extends RecyclerView.Adapter<DonHangAdapter.MyViewHo
 
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
-        DonHang donHang = listdonghang.get(position);
+        DonHang donHang = listdonhang.get(position);
         holder.iddonhang.setText("Đơn hàng: "+donHang.getId());
         LinearLayoutManager layoutManager = new LinearLayoutManager(
-                holder .chitietdonhang.getContext(),
+                context,
                 LinearLayoutManager.VERTICAL,
                 false
         );
@@ -49,7 +49,7 @@ public class DonHangAdapter extends RecyclerView.Adapter<DonHangAdapter.MyViewHo
 
     @Override
     public int getItemCount() {
-        return listdonghang.size();
+        return listdonhang.size();
     }
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
@@ -57,8 +57,8 @@ public class DonHangAdapter extends RecyclerView.Adapter<DonHangAdapter.MyViewHo
         RecyclerView chitietdonhang;
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
-            iddonhang = itemView.findViewById(R.id.iddonhang);
-            chitietdonhang = itemView.findViewById(R.id.recyclerviewdonhang);
+            iddonhang = (TextView) itemView.findViewById(R.id.iddonhang);
+            chitietdonhang = (RecyclerView) itemView.findViewById(R.id.chitietdonhang);
         }
     }
 }
