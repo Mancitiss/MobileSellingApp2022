@@ -5,9 +5,47 @@
       <map>
         <entry key="..\:/App/TestApplication/app/src/main/res/layout/activity_main.xml" value="0.33" />
         <entry key="..\:/App/TestApplication/app/src/main/res/layout/loading.xml" value="0.1762917933130699" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/Account2.xml" value="0.25" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/account.xml" value="0.31239935587761675" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/account2.xml" value="0.2" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/account3.xml" value="0.25" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/activity_creat_new_password.xml" value="0.20885416666666667" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/activity_login.xml" value="0.20572916666666666" />
         <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/activity_main.xml" value="0.1762917933130699" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/activity_sign_up.xml" value="0.22" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/activity_splash.xml" value="0.20989583333333334" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/activity_view_product.xml" value="0.33" />
         <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/cardviewlayoutsample.xml" value="0.1762917933130699" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/cart.xml" value="0.25" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/giohang.xml" value="0.21557971014492755" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/giohang2.xml" value="0.25" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/item_category.xml" value="0.1259259259259259" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/item_chitiet.xml" value="0.1" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/item_donhang.xml" value="0.33" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/item_food.xml" value="0.1259259259259259" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/item_giohang.xml" value="0.33" />
         <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/loading.xml" value="0.1322463768115942" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/payment_activity_main.xml" value="0.2" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/payment_activity_main2.xml" value="0.20989583333333334" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/payment_activity_main3.xml" value="0.18802083333333333" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/payment_activity_main4.xml" value="0.20989583333333334" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/receipt.xml" value="0.22" />
+        <entry key="..\:/Github/MobileSellingApp2022/TestApplication/app/src/main/res/layout/toolbar.xml" value="0.25" />
+        <entry key="..\:/Users/Phuong Quyen/MobileSellingApp2022/TestApplication/app/src/main/res/layout/account.xml" value="0.25" />
+        <entry key="..\:/Users/Phuong Quyen/MobileSellingApp2022/TestApplication/app/src/main/res/layout/account2.xml" value="0.25" />
+        <entry key="..\:/Users/Phuong Quyen/MobileSellingApp2022/TestApplication/app/src/main/res/layout/account3.xml" value="0.25" />
+        <entry key="..\:/Users/Phuong Quyen/MobileSellingApp2022/TestApplication/app/src/main/res/layout/activity_login.xml" value="0.25" />
+        <entry key="..\:/Users/Phuong Quyen/MobileSellingApp2022/TestApplication/app/src/main/res/layout/activity_main.xml" value="0.25" />
+        <entry key="..\:/Users/Phuong Quyen/MobileSellingApp2022/TestApplication/app/src/main/res/layout/activity_splash.xml" value="0.25" />
+        <entry key="..\:/Users/Phuong Quyen/MobileSellingApp2022/TestApplication/app/src/main/res/layout/activity_view_product.xml" value="0.264" />
+        <entry key="..\:/Users/Phuong Quyen/MobileSellingApp2022/TestApplication/app/src/main/res/layout/cart.xml" value="0.25" />
+        <entry key="..\:/Users/Phuong Quyen/MobileSellingApp2022/TestApplication/app/src/main/res/layout/giohang2.xml" value="0.25" />
+        <entry key="..\:/Users/Phuong Quyen/MobileSellingApp2022/TestApplication/app/src/main/res/layout/item_category.xml" value="0.25" />
+        <entry key="..\:/Users/Phuong Quyen/MobileSellingApp2022/TestApplication/app/src/main/res/layout/item_chitiet.xml" value="0.25" />
+        <entry key="..\:/Users/Phuong Quyen/MobileSellingApp2022/TestApplication/app/src/main/res/layout/item_donhang.xml" value="0.25" />
+        <entry key="..\:/Users/Phuong Quyen/MobileSellingApp2022/TestApplication/app/src/main/res/layout/item_food.xml" value="0.25" />
+        <entry key="..\:/Users/Phuong Quyen/MobileSellingApp2022/TestApplication/app/src/main/res/layout/receipt.xml" value="0.25" />
+        <entry key="..\:/Users/Phuong Quyen/MobileSellingApp2022/TestApplication/app/src/main/res/layout/toolbar.xml" value="0.25" />
       </map>
     </option>
   </component>

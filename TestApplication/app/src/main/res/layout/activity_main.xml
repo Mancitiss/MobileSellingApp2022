@@ -9,132 +9,154 @@
     tools:context=".MainActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/mainMenu"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <ImageButton
-            android:id="@+id/SettingsMenu"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="#0000"
-            android:contentDescription="@string/IB2_des"
-            android:onClick="openMenu"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/menu_rounded_50" />
-
-        <SearchView
-            android:id="@+id/SearchBar"
-            android:layout_width="0dp"
-            android:layout_height="50dp"
-            app:layout_constraintEnd_toStartOf="@+id/CartButton"
-            app:layout_constraintStart_toEndOf="@+id/SettingsMenu"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <ImageButton
-            android:id="@+id/NotificationButton"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="#0000"
-            android:contentDescription="@string/IB2_des"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/notification_50" />
-
-        <ImageButton
-            android:id="@+id/CartButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="#0000"
-            android:contentDescription="@string/IB2_des"
-            app:layout_constraintEnd_toStartOf="@+id/NotificationButton"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/shopping_cart_50" />
+        android:layout_height="match_parent"
+        android:background="@color/white">
 
         <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="50dp"
-            android:contentDescription="@string/IB2_des"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            android:scrollbars="none">
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/ScrollMenuLayout"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-                <HorizontalScrollView
-                    android:id="@+id/Category"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="100dp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent">
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/topPnl"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
 
-                    <LinearLayout
+                    <ImageButton
+                        android:id="@+id/btn_menu"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:background="@color/white"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@drawable/ic_menu_32" />
+
+                    <ImageButton
+                        android:id="@+id/btn_cart"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:background="@color/white"
+                        app:layout_constraintEnd_toStartOf="@+id/btn_noti"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@drawable/ic_cart_32" />
+
+                    <ImageButton
+                        android:id="@+id/btn_noti"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:background="@color/white"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@drawable/ic_bell_32" />
+
+                    <EditText
+                        android:id="@+id/tv_search"
+                        android:layout_width="330dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="70dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/search_bg"
+                        android:drawableStart="@drawable/ic_search"
+                        android:drawablePadding="10dp"
+                        android:ems="10"
+                        android:hint="Tìm kiếm theo bộ sưu tập, món ăn"
+                        android:inputType="textPersonName"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:textColor="@color/SearchBackground"
+                        android:textSize="16sp"
+                        android:textStyle="italic"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/textView4"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                        android:layout_marginStart="12dp"
+                        android:layout_marginTop="20dp"
+                        android:text="Bộ sưu tập"
+                        android:textColor="@color/black"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/tv_search" />
 
-                        <ImageButton
-                            android:id="@+id/category_6"
-                            android:layout_width="100dp"
-                            android:layout_height="100dp"
-                            android:layout_weight="1"
-                            android:contentDescription="@string/IB2_des"
-                            tools:srcCompat="@tools:sample/avatars" />
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rv_category"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="12dp"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/textView4"
+                        tools:itemCount="1"
+                        tools:listitem="@layout/item_category" />
 
-                        <ImageButton
-                            android:id="@+id/category_5"
-                            android:layout_width="100dp"
-                            android:layout_height="100dp"
-                            android:layout_weight="1"
-                            android:contentDescription="@string/IB2_des"
-                            tools:srcCompat="@tools:sample/avatars" />
+                    <TextView
+                        android:id="@+id/textView6"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginTop="24dp"
+                        android:text="Gợi ý"
+                        android:textColor="@color/black"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/rv_category" />
 
-                        <ImageButton
-                            android:id="@+id/category_4"
-                            android:layout_width="100dp"
-                            android:layout_height="100dp"
-                            android:layout_weight="1"
-                            android:contentDescription="@string/IB2_des"
-                            tools:srcCompat="@tools:sample/avatars" />
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rv_suggestfood"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="12dp"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/textView6"
+                        tools:itemCount="1"
+                        tools:listitem="@layout/item_food" />
 
-                        <ImageButton
-                            android:id="@+id/category_3"
-                            android:layout_width="100dp"
-                            android:layout_height="100dp"
-                            android:layout_weight="1"
-                            android:contentDescription="@string/IB2_des"
-                            tools:srcCompat="@tools:sample/avatars" />
+                    <TextView
+                        android:id="@+id/textView3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginTop="24dp"
+                        android:text="Mới"
+                        android:textColor="@color/black"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/rv_suggestfood" />
 
-                        <ImageButton
-                            android:id="@+id/category_2"
-                            android:layout_width="100dp"
-                            android:layout_height="100dp"
-                            android:layout_weight="1"
-                            android:contentDescription="@string/IB2_des"
-                            tools:srcCompat="@tools:sample/avatars" />
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rv_newfood"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="12dp"
+                        android:orientation="horizontal"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/textView3"
+                        tools:itemCount="1"
+                        tools:listitem="@layout/item_food"
+                        android:layout_marginTop="12dp"/>
 
-                        <ImageButton
-                            android:id="@+id/category_1"
-                            android:layout_width="100dp"
-                            android:layout_height="100dp"
-                            android:layout_weight="1"
-                            android:contentDescription="@string/IB2_des"
-                            tools:srcCompat="@tools:sample/avatars" />
-                    </LinearLayout>
-                </HorizontalScrollView>
-
-
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </LinearLayout>
         </ScrollView>
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -147,11 +169,18 @@
         >
 
         <TextView
+            android:id="@+id/menuGoToMain"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="20dp"
             android:text="@string/navigation_label_main"
-            android:onClick="goTo"
+            />
+        <TextView
+            android:id="@+id/menuGoToAccount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="20dp"
+            android:text="@string/navigation_label_account"
             />
 
     </LinearLayout>

@@ -1,230 +1,220 @@
 package org.duckdns.mancitiss.testapplication
 
-import android.app.ActionBar
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.content.Context
+import android.content.Intent
+import android.graphics.Rect
 import android.os.Bundle
-import android.view.Gravity
+import android.util.Log
+import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
-import android.widget.ImageView
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.constraintlayout.widget.ConstraintSet
-import androidx.core.view.marginTop
-import androidx.core.widget.TextViewCompat
+import androidx.core.view.GravityCompat
+import androidx.core.widget.doAfterTextChanged
 import androidx.drawerlayout.widget.DrawerLayout
-import com.google.android.material.resources.TextAppearance
+import androidx.recyclerview.widget.LinearLayoutManager
+import kotlinx.android.synthetic.main.activity_main.*
+import org.duckdns.mancitiss.testapplication.adapter.CategoryAdapter
+import org.duckdns.mancitiss.testapplication.adapter.FoodAdapter
+import org.duckdns.mancitiss.testapplication.entities.Categories
+import org.duckdns.mancitiss.testapplication.entities.Foods
+import java.util.*
+import kotlin.concurrent.thread
 
 
 class MainActivity : AppCompatActivity() {
+    //companion object {
 
-    var items = mutableListOf<Int>()
+        private var arrCategory = ArrayList<Categories>()
+        private var categoryAdapter = CategoryAdapter()
+
+        private var arrNewestFood = ArrayList<Foods>()
+        private var arrRecommendedFood = ArrayList<Foods>()
+        private var newestFoodAdapter = FoodAdapter()
+        private var recommendedFoodAdapter = FoodAdapter()
+
+        private var newArray: ArrayList<Foods> = ArrayList<Foods>()
+        private var recommendedArray: ArrayList<Foods> = ArrayList<Foods>()
+    //}
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        if (event.action == MotionEvent.ACTION_DOWN) {
+            val v = currentFocus
+            if (v is EditText) {
+                val outRect = Rect()
+                v.getGlobalVisibleRect(outRect)
+                if (!outRect.contains(event.rawX.toInt(), event.rawY.toInt())) {
+                    v.clearFocus()
+                    val imm: InputMethodManager =
+                        getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0)
+                }
+            }
+        }
+        return super.dispatchTouchEvent(event)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.loading)
-        Thread.sleep(3000)
+        val model = Models.getInstance()
+        newestFoodAdapter.mContext = this
+        recommendedFoodAdapter.mContext = this
+        categoryAdapter.activity = this
+
         setContentView(R.layout.activity_main)
-        //items.add(R.id.item_1)
-        reset()
-    }
-    fun addText(text: String?){
-        val constraintLayout = findViewById<ConstraintLayout>(R.id.ScrollMenuLayout)
-        val dynamicTextview = TextView(this)
-        dynamicTextview.text = text
-        dynamicTextview.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.WRAP_CONTENT)
-        dynamicTextview.id = View.generateViewId()
-        constraintLayout.addView(dynamicTextview)
-        val constraintSet = ConstraintSet()
-        constraintSet.clone(constraintLayout)
-        constraintSet.connect(
-            dynamicTextview.id,
-            ConstraintSet.LEFT,
-            R.id.ScrollMenuLayout,
-            ConstraintSet.RIGHT,
-            resources.getDimension(R.dimen.zero_dp).toInt()
-        )
-        constraintSet.connect(
-            dynamicTextview.id,
-            ConstraintSet.TOP,
-            items.get(items.size-1),
-            ConstraintSet.BOTTOM,
-            resources.getDimension(R.dimen.min_space).toInt()
-        )
-        constraintSet.applyTo(constraintLayout)
-        items.add(dynamicTextview.id)
-    }
-    fun addItem(name: String?, description: String?, price: Int? = 0, image: Bitmap? = null) {
-        val constraintLayout = findViewById<ConstraintLayout>(R.id.ScrollMenuLayout)
-        val dynamicCardView = CardView(this)
-        dynamicCardView.id = View.generateViewId()
-        dynamicCardView.layoutParams = ViewGroup.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT)
-        constraintLayout.addView(dynamicCardView)
+        arrCategory.add(Categories(1,"Tất cả", R.drawable.noodle))
+        arrCategory.add(Categories(2,"Món ăn", R.drawable.food))
+        arrCategory.add(Categories(3,"Thức uống", R.drawable.drink))
+        arrCategory.add(Categories(4,"Gà rán", R.drawable.chicken))
+        arrCategory.add(Categories(5,"Thức ăn nhanh", R.drawable.hamberger))
+        arrCategory.add(Categories(6,"Bánh ngọt", R.drawable.cake))
 
-        var constraintSet = ConstraintSet()
-        constraintSet.clone(constraintLayout)
-        if (items.size > 0){
-            constraintSet.connect(
-                dynamicCardView.id,
-                ConstraintSet.TOP,
-                items.get(items.size-1),
-                ConstraintSet.BOTTOM,
-                resources.getDimension(R.dimen.cardView_margin_top).toInt()
-            )
-        } else {
-            constraintSet.connect(
-                dynamicCardView.id,
-                ConstraintSet.TOP,
-                R.id.Category,
-                ConstraintSet.BOTTOM,
-                resources.getDimension(R.dimen.cardView_margin_top).toInt()
-            )
+        categoryAdapter.setData(arrCategory)
+
+        rv_category.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        rv_category.adapter = categoryAdapter
+
+        //Set New Food Button
+        newestFoodAdapter.setData(arrNewestFood)
+        rv_suggestfood.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        rv_suggestfood.adapter = newestFoodAdapter
+        recommendedFoodAdapter.setData(arrRecommendedFood)
+        rv_newfood.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        rv_newfood.adapter = recommendedFoodAdapter
+
+        tv_search.doAfterTextChanged {
+            if (!tv_search.text.isNullOrBlank())
+            {
+                newArray = ArrayList<Foods>()
+                recommendedArray = ArrayList<Foods>()
+                for (food: Foods in arrNewestFood){
+                    if (food.name.contains(tv_search.text)) newArray.add(food)
+                }
+                for (food: Foods in arrRecommendedFood){
+                    if (food.name.contains(tv_search.text)) recommendedArray.add(food)
+                }
+                newestFoodAdapter.setData(newArray)
+                recommendedFoodAdapter.setData(recommendedArray)
+                runOnUiThread{
+                    newestFoodAdapter.notifyDataSetChanged()
+                    recommendedFoodAdapter.notifyDataSetChanged()
+                }
+            }
+            else {
+                newestFoodAdapter.setData(arrNewestFood)
+                recommendedFoodAdapter.setData(arrRecommendedFood)
+                runOnUiThread {
+                    newestFoodAdapter.notifyDataSetChanged()
+                    recommendedFoodAdapter.notifyDataSetChanged()
+                }
+            }
         }
-        constraintSet.connect(
-            dynamicCardView.id,
-            ConstraintSet.START,
-            R.id.ScrollMenuLayout,
-            ConstraintSet.START,
-            resources.getDimension(R.dimen.cardView_margin_start).toInt()
-        )
-        constraintSet.connect(
-            dynamicCardView.id,
-            ConstraintSet.END,
-            R.id.ScrollMenuLayout,
-            ConstraintSet.END,
-            resources.getDimension(R.dimen.cardView_margin_end).toInt()
-        )
-        constraintSet.applyTo(constraintLayout)
-        items.add(dynamicCardView.id)
-        // add layout to cardView
-        val dynamicLayout = ConstraintLayout(this)
-        dynamicLayout.id = View.generateViewId()
-        dynamicLayout.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-        dynamicCardView.addView(dynamicLayout)
 
-        // add image, texts to the layout created above
-        val imageView = ImageView(this)
-        imageView.id = View.generateViewId()
-        imageView.layoutParams = ViewGroup.LayoutParams(
-            resources.getDimension(R.dimen.item_image_size_width).toInt(),
-            resources.getDimension(R.dimen.item_image_size_height).toInt()
-        )
-        imageView.setImageBitmap(image)
-        dynamicLayout.addView(imageView)
-
-        constraintSet = ConstraintSet()
-        constraintSet.clone(dynamicLayout)
-        constraintSet.connect(
-            imageView.id,
-            ConstraintSet.START,
-            dynamicLayout.id,
-            ConstraintSet.START,
-            resources.getDimension(R.dimen.item_image_margin_start).toInt()
-        )
-        constraintSet.connect(
-            imageView.id,
-            ConstraintSet.TOP,
-            dynamicLayout.id,
-            ConstraintSet.TOP,
-            resources.getDimension(R.dimen.item_image_margin_top).toInt()
-        )
-        constraintSet.applyTo(dynamicLayout)
-
-
-
-        val nameView = TextView(this)
-        nameView.id = View.generateViewId()
-        nameView.text = name
-        TextViewCompat.setTextAppearance(nameView, androidx.appcompat.R.style.TextAppearance_AppCompat_Large)
-        nameView.layoutParams = ViewGroup.LayoutParams(
-            resources.getDimension(R.dimen.item_title_width).toInt(),
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-        dynamicLayout.addView(nameView)
-
-        constraintSet = ConstraintSet()
-        constraintSet.clone(dynamicLayout)
-        constraintSet.connect(
-            nameView.id,
-            ConstraintSet.TOP,
-            dynamicLayout.id,
-            ConstraintSet.TOP,
-            resources.getDimension(R.dimen.item_title_margin_top).toInt()
-        )
-        constraintSet.connect(
-            nameView.id,
-            ConstraintSet.START,
-            imageView.id,
-            ConstraintSet.END,
-            resources.getDimension(R.dimen.item_title_margin_start).toInt()
-        )
-        constraintSet.connect(
-            nameView.id,
-            ConstraintSet.END,
-            dynamicLayout.id,
-            ConstraintSet.END,
-            resources.getDimension(R.dimen.item_title_margin_end).toInt()
-        )
-        constraintSet.applyTo(dynamicLayout)
-
-
-
-        val desView = TextView(this)
-        desView.id = View.generateViewId()
-        desView.text = description
-        TextViewCompat.setTextAppearance(desView, androidx.appcompat.R.style.TextAppearance_AppCompat_Medium)
-        desView.layoutParams = ViewGroup.LayoutParams(
-            resources.getDimension(R.dimen.item_description_width).toInt(),
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-        dynamicLayout.addView(desView)
-
-        constraintSet = ConstraintSet()
-        constraintSet.clone(dynamicLayout)
-        constraintSet.connect(
-            desView.id,
-            ConstraintSet.TOP,
-            nameView.id,
-            ConstraintSet.BOTTOM,
-            resources.getDimension(R.dimen.item_description_margin_top).toInt()
-        )
-        constraintSet.connect(
-            desView.id,
-            ConstraintSet.START,
-            imageView.id,
-            ConstraintSet.END,
-            resources.getDimension(R.dimen.item_description_margin_start).toInt()
-        )
-        constraintSet.connect(
-            desView.id,
-            ConstraintSet.END,
-            dynamicLayout.id,
-            ConstraintSet.END,
-            resources.getDimension(R.dimen.item_description_margin_end).toInt()
-        )
-        constraintSet.applyTo(dynamicLayout)
-    }
-
-    fun reset(){
-        items = mutableListOf<Int>()
-        addItem("Gà nướng(?)", "Ngon nhứt nha ngon nhứt nha ngon nhứt nhaa", 0, BitmapFactory.decodeResource(resources, R.drawable.thanksgiving_chicken_96))
-        addItem("Khoai tây chiênnn", "Ngon hơn khi dùng lạnh!", 0, BitmapFactory.decodeResource(resources, R.drawable.mcdonald_s_french_fries_96))
-        addItem("Bắp nổ", "Dùng để ăn trong khi chờ đến giờ vào rạp", 0, BitmapFactory.decodeResource(resources, R.drawable.popcorn_96))
-        addItem("Boba Bola", "Bepis", 0, BitmapFactory.decodeResource(resources, R.drawable.cola_96))
-    }
-
-    fun goTo(view: View) {
-        if ((view as TextView).text == "Main"){
-            findViewById<DrawerLayout>(R.id.main_drawer_layout).closeDrawers()
-            setContentView(R.layout.activity_main)
-            reset()
+        btn_menu.setOnClickListener{
+            openMenu(it)
         }
+
+        btn_noti.setOnClickListener {
+            openNotification(it)
+        }
+        btn_cart.setOnClickListener {
+            openCart(it)
+        }
+        menuGoToMain.setOnClickListener{
+            goTo(it)
+        }
+        menuGoToAccount.setOnClickListener{
+            goTo(it)
+        }
+
+        thread{
+            load(arrNewestFood.size.toLong())
+        }
+    }
+
+    fun addFood(food: Foods){
+        arrNewestFood.add(food)
     }
 
     fun openMenu(view: View) {
-        findViewById<DrawerLayout>(R.id.main_drawer_layout).openDrawer(Gravity.LEFT)
+        findViewById<DrawerLayout>(R.id.main_drawer_layout).openDrawer(GravityCompat.START)
+    }
+
+    fun load(index: Long = 0){
+        Connection.load(this, this, index)
+        arrRecommendedFood = ArrayList(arrNewestFood)
+        arrRecommendedFood.sortByDescending { (it.product.averageStars) }
+        newestFoodAdapter.setData(arrNewestFood)
+        recommendedFoodAdapter.setData(arrRecommendedFood)
+        for (food: Foods in arrRecommendedFood){
+            Log.d("connecting", food.id)
+        }
+        runOnUiThread {
+            newestFoodAdapter.notifyDataSetChanged()
+            recommendedFoodAdapter.notifyDataSetChanged()
+        }
+    }
+
+    fun goTo(view: View) {
+        when((view as TextView).text){
+            getString(R.string.navigation_label_main)->{
+                Log.d("Connecting","main clicked")
+                findViewById<DrawerLayout>(R.id.main_drawer_layout).closeDrawers()
+            }
+            getString(R.string.navigation_label_account)->{
+                Log.d("Connecting", "account clicked")
+                thread {
+                    if (Connection.isLoggedIn(this, this)) {
+                        Log.d("Connecting", "Account starting")
+                        runOnUiThread {
+                            startActivity(Intent(this, Account::class.java))
+                        }
+                    } else {
+                        Log.d("Connecting", "Login starting")
+                        runOnUiThread {
+                            startActivity(Intent(this, Login::class.java))
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    fun openCart(view: View) {
+        startActivity(Intent(this, CartActivity::class.java))
+    }
+
+    fun openNotification(view: View) {
+        startActivity(Intent(this, ReceiptActivity::class.java))
+    }
+
+    fun categorize(category: String){
+        if (category != "Tất cả") {
+            newArray = ArrayList<Foods>()
+            recommendedArray = ArrayList<Foods>()
+            for (food: Foods in arrNewestFood) {
+                if (food.product.category == category) newArray.add(food)
+            }
+            for (food: Foods in arrRecommendedFood) {
+                if (food.product.category == category) recommendedArray.add(food)
+            }
+            newestFoodAdapter.setData(newArray)
+            recommendedFoodAdapter.setData(recommendedArray)
+            runOnUiThread {
+                newestFoodAdapter.notifyDataSetChanged()
+                recommendedFoodAdapter.notifyDataSetChanged()
+            }
+        }
+        else {
+            newestFoodAdapter.setData(arrNewestFood)
+            recommendedFoodAdapter.setData(arrRecommendedFood)
+            runOnUiThread {
+                newestFoodAdapter.notifyDataSetChanged()
+                recommendedFoodAdapter.notifyDataSetChanged()
+            }
+        }
     }
 }

@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".Account">
+
+    <include layout = "@layout/toolbar"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#FF3A5C"
+        android:layout_marginTop="0dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="15dp"
+        android:gravity="center"
+        android:orientation="vertical">
+        <com.mikhaellopez.circularimageview.CircularImageView
+            android:layout_width="110dp"
+            android:layout_height="110dp"
+            android:src="@mipmap/ic_launcher"/>
+        <TextView
+            android:id="@+id/name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Harry Jacksion"
+            android:textColor="#FF3A5C"
+            android:textSize="20sp"
+            android:layout_marginTop="8dp"
+            android:textStyle="bold"/>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#FF3A5C"
+            android:layout_marginTop="10dp"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:layout_marginTop="20dp"
+        android:gravity="center_vertical">
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/ic_person"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Họ Tên"
+            android:textSize="18sp"
+            android:textColor="@android:color/black"
+            android:layout_marginStart="5dp"/>
+        <TextView
+            android:id="@+id/name_Account"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Harry"
+            android:layout_marginStart="16dp"
+            android:textSize="18sp"
+            android:textColor="@android:color/darker_gray"/>
+
+    </LinearLayout>
+
+    <!--
+    <View
+        android:layout_width="wrap_content"
+        android:layout_height="0.5dp"
+        android:background="@android:color/darker_gray"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginRight="15dp"/>
+        -->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginStart="15dp"
+            android:src="@drawable/ic_contact_phone"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SĐT"
+            android:textSize="18sp"
+            android:layout_marginStart="5dp"
+            android:textColor="@android:color/black"/>
+        <TextView
+            android:id="@+id/phone_Account"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0988756432"
+            android:layout_marginStart="40dp"
+            android:textSize="18sp"
+            android:textColor="@android:color/darker_gray"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:layout_marginTop="20dp"
+        android:gravity="center_vertical">
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/ic_email"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Email"
+            android:textSize="18sp"
+            android:textColor="@android:color/black"
+            android:layout_marginStart="5dp"/>
+        <TextView
+            android:id="@+id/email_Account"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Jacksion@email.com"
+            android:layout_marginStart="29dp"
+            android:textSize="18sp"
+            android:textColor="@android:color/darker_gray"/>
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="wrap_content"
+        android:layout_height="0.5dp"
+        android:background="@android:color/darker_gray"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp">
+    </View>
+
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:orientation="vertical">
+
+
+        <TextView
+            android:layout_width="240dp"
+            android:layout_height="70dp"
+            android:background="@drawable/bg_btn"
+            android:text="Thay đổi thông tin"
+            android:gravity="center"
+            android:padding="20dp"
+            android:id="@+id/txt_View1"
+            android:textColor="#FF3A5C"
+            android:textSize="18sp"
+            android:drawableStart="@drawable/ic_edit"/>
+
+        <TextView
+            android:layout_width="240dp"
+            android:layout_height="70dp"
+            android:layout_marginTop="20dp"
+            android:id="@+id/txt_change"
+            android:background="@drawable/bg_btn"
+            android:text="Đổi mật khẩu"
+            android:gravity="center"
+            android:padding="20dp"
+            android:textColor="#FF3A5C"
+            android:textSize="18sp"
+            android:drawableLeft="@drawable/ic_lock"/>
+
+    </LinearLayout>
+
+
+
+
+
+</LinearLayout>
