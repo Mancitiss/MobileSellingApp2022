@@ -76,14 +76,6 @@ class MainActivity : AppCompatActivity() {
         rv_category.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         rv_category.adapter = categoryAdapter
 
-        //Set New Food Button
-        newestFoodAdapter.setData(arrNewestFood)
-        rv_suggestfood.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        rv_suggestfood.adapter = newestFoodAdapter
-        recommendedFoodAdapter.setData(arrRecommendedFood)
-        rv_newfood.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        rv_newfood.adapter = recommendedFoodAdapter
-
         tv_search.doAfterTextChanged {
             if (!tv_search.text.isNullOrBlank())
             {
@@ -128,7 +120,19 @@ class MainActivity : AppCompatActivity() {
         menuGoToAccount.setOnClickListener{
             goTo(it)
         }
+        reload()
+    }
 
+    fun reload(){
+        //Set New Food Button
+        arrNewestFood = ArrayList<Foods>()
+        arrRecommendedFood = ArrayList<Foods>()
+        newestFoodAdapter.setData(arrNewestFood)
+        rv_suggestfood.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        rv_suggestfood.adapter = newestFoodAdapter
+        recommendedFoodAdapter.setData(arrRecommendedFood)
+        rv_newfood.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        rv_newfood.adapter = recommendedFoodAdapter
         thread{
             load(arrNewestFood.size.toLong())
         }

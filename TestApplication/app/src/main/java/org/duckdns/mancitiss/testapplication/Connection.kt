@@ -471,5 +471,80 @@ class Connection{
                 }
             }
         }
+
+        fun cancelOrderBeforeDelivery(activity: Activity, context: Context, orderID: String): Boolean{
+            try {
+                Log.d("connecting", "starting to cancel order")
+                val pref: SharedPreferences =
+                    activity.getSharedPreferences("preferences", Context.MODE_PRIVATE)
+                val token = pref.getString("token", "00000000000000000000000000000000")
+                val ssf: SSLSocketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
+                (ssf.createSocket(
+                    context.getString(R.string.serverAddress),
+                    context.resources.getInteger(R.integer.port)
+                ) as SSLSocket).use {
+                    val DOS = DataOutputStream(it.getOutputStream())
+                    val DIS = DataInputStream(it.getInputStream())
+                    DOS.write(Tools.combine("2612".toByteArray(StandardCharsets.UTF_16LE), token!!.toByteArray(StandardCharsets.US_ASCII), Tools.data_with_ASCII_byte(orderID).toByteArray(StandardCharsets.US_ASCII)))
+                    when(val instruction = Tools.receive_unicode(DIS, 8)){
+                        "2613"->{
+                            Log.d("connecting", "order canceled")
+                            return true
+                        }
+                        else -> {
+                            Log.d("connecting", "order not canceled")
+                            return false
+                        }
+                    }
+                }
+            }
+            catch(e: Exception){
+                Log.d("connecting", e.stackTraceToString())
+                return false
+            }
+        }
+
+        fun sendRate(activity: Activity, context: Context, orderID: String, foodID: String, rate: Int): Boolean{
+            try {
+                Log.d("connecting", "starting to send rate")
+                val pref: SharedPreferences =
+                    activity.getSharedPreferences("preferences", Context.MODE_PRIVATE)
+                val token = pref.getString("token", "00000000000000000000000000000000")
+                val ssf: SSLSocketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
+                (ssf.createSocket(
+                    context.getString(R.string.serverAddress),
+                    context.resources.getInteger(R.integer.port)
+                ) as SSLSocket).use {
+                    val DOS = DataOutputStream(it.getOutputStream())
+                    val DIS = DataInputStream(it.getInputStream())
+                    DOS.write(
+                        Tools.combine(
+                            "1901".toByteArray(StandardCharsets.UTF_16LE),
+                            token!!.toByteArray(StandardCharsets.US_ASCII),
+                            Tools.data_with_ASCII_byte(orderID)
+                                .toByteArray(StandardCharsets.US_ASCII),
+                            Tools.data_with_ASCII_byte(foodID)
+                                .toByteArray(StandardCharsets.US_ASCII),
+                            Tools.data_with_ASCII_byte(rate.toString())
+                                .toByteArray(StandardCharsets.US_ASCII)
+                        )
+                    )
+                    when (val instruction = Tools.receive_unicode(DIS, 8)) {
+                        "1901" -> {
+                            Log.d("connecting", "rate sent")
+                            return true
+                        }
+                        else -> {
+                            Log.d("connecting", "rate not sent")
+                            return false
+                        }
+                    }
+                }
+            }
+            catch(e: Exception){
+                Log.d("connecting", e.stackTraceToString())
+                return false
+            }
+        }
     }
 }

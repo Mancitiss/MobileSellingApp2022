@@ -29,7 +29,7 @@ class Tools {
                 String(buffer, StandardCharsets.US_ASCII)
             } else {
                 //String s = new String(buffer, 0, total_byte_received, StandardCharsets.US_ASCII);
-                ""
+                "0"
             }
         }
 
@@ -52,7 +52,7 @@ class Tools {
                 String(buffer, StandardCharsets.US_ASCII)
             } else {
                 //String s = new String(buffer, 0, total_byte_received, StandardCharsets.US_ASCII);
-                ""
+                "0"
             }
         }
 

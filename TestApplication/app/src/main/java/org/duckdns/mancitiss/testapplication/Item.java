@@ -6,6 +6,7 @@ public class Item {
     public String idsp;
     public int soluong;
     public String tinhtrang;
+    public int rate = 0;
 
     public Item(){}
 
