@@ -394,6 +394,62 @@ class Connection{
             return false
         }
 
+        fun PlaceOrderWithoutAccount(activity: Activity, context: Context): Boolean{
+            try {
+                Log.d("connecting", "starting to place order")
+                val pref: SharedPreferences =
+                    activity.getSharedPreferences("preferences", Context.MODE_PRIVATE)
+                val token = pref.getString("token", "00000000000000000000000000000000")
+                val ssf: SSLSocketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
+                (ssf.createSocket(
+                    context.getString(R.string.serverAddress),
+                    context.resources.getInteger(R.integer.port)
+                ) as SSLSocket).use {
+                    val DOS = DataOutputStream(it.getOutputStream())
+                    val DIS = DataInputStream(it.getInputStream())
+                    val order: Order = Order()
+                    order.name = Models.getInstance().currentname
+                    order.phoneNumber = Models.getInstance().currentphone
+                    order.address = Models.getInstance().currentaddress
+                    order.items = Models.getInstance().shoppingCart
+                    val gson = Gson()
+                    val json = gson.toJson(order, Order::class.java)
+                    Log.d("connecting", json)
+                    DOS.write(Tools.combine("2610".toByteArray(StandardCharsets.UTF_16LE), token!!.toByteArray(StandardCharsets.US_ASCII), Tools.data_with_unicode_byte(json).toByteArray(StandardCharsets.UTF_16LE)))
+                    when(val instruction = Tools.receive_unicode(DIS, 8)){
+                        "2611"->{
+                            val id = Tools.receiveASCII(DIS, 21)
+                            var orderString = pref.getString("orders", "")
+                            orderString = orderString + id + ";"
+                            val editor: SharedPreferences.Editor = pref!!.edit()
+                            editor.putString("orders", orderString)
+                            editor.commit()
+                            /*
+                            val total = Tools.receive_ASCII_Automatically(DIS).toLong()
+                            Log.d("connecting", "order placed" + id)
+                            val itemList = ArrayList<Item>()
+                            for(i in Models.getInstance().shoppingCart){
+                                itemList.add(Item(i.key, i.value, "Đang chờ xử lý"))
+                            }
+                            val donHang = DonHang(id, order.address, order.phoneNumber, order.name, total, itemList.toArray(arrayOf<Item>()))
+
+                            Models.getInstance().knownOrders[id] = donHang
+                             */
+                            return true
+                        }
+                        else -> {
+                            Log.d("connecting", "order not placed")
+                            return false
+                        }
+                    }
+                }
+            }
+            catch(e: Exception){
+                Log.d("connecting", e.stackTraceToString())
+                return false
+            }
+        }
+
         fun PlaceOrderWithAccount(activity: Activity, context: Context): Boolean{
             try {
                 Log.d("connecting", "starting to place order")
@@ -418,6 +474,8 @@ class Connection{
                     DOS.write(Tools.combine("2610".toByteArray(StandardCharsets.UTF_16LE), token!!.toByteArray(StandardCharsets.US_ASCII), Tools.data_with_unicode_byte(json).toByteArray(StandardCharsets.UTF_16LE)))
                     when(val instruction = Tools.receive_unicode(DIS, 8)){
                         "2611"->{
+                            Log.d("connecting", "order placed")
+
                             val id = Tools.receiveASCII(DIS, 21)
                             val total = Tools.receive_ASCII_Automatically(DIS).toLong()
                             Log.d("connecting", "order placed" + id)
@@ -468,6 +526,52 @@ class Connection{
                     else -> {
                         Log.d("connecting", "unknown error in get known orders")
                     }
+                }
+            }
+        }
+
+        fun getCachedOrders(activity: Activity, context: Context){
+            Log.d("connecting", "starting to place order")
+            val pref: SharedPreferences =
+                activity.getSharedPreferences("preferences", Context.MODE_PRIVATE)
+            val token = pref.getString("token", "00000000000000000000000000000000")
+            val orderString = pref.getString("orders", "")
+            if (orderString == "") {return}
+            val orderStringList = orderString?.split(";")
+            for(i in orderStringList!!){
+                try {
+                    val ssf: SSLSocketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
+                    (ssf.createSocket(
+                        context.getString(R.string.serverAddress),
+                        context.resources.getInteger(R.integer.port)
+                    ) as SSLSocket).use {
+                        val DOS = DataOutputStream(it.getOutputStream())
+                        val DIS = DataInputStream(it.getInputStream())
+                        DOS.write(
+                            Tools.combine(
+                                "7070".toByteArray(StandardCharsets.UTF_16LE),
+                                Tools.data_with_ASCII_byte(i).toByteArray(StandardCharsets.US_ASCII)
+                            )
+                        )
+                        when (val instruction = Tools.receive_unicode(DIS, 8)) {
+                            "7070" -> {
+                                val json = Tools.receive_Unicode_Automatically(DIS)
+                                Log.d("connecting", json)
+                                val order = Gson().fromJson(json, DonHang::class.java)
+                                Models.getInstance().knownOrders[order.id] = order
+                                Log.d("connecting", order.getItemList().get(0).idsp)
+                            }
+                            else -> {
+                                Log.d(
+                                    "connecting",
+                                    "unknown error in get known orders without acount"
+                                )
+                            }
+                        }
+                    }
+                }
+                catch(e: Exception){
+                    Log.d("connecting", e.stackTraceToString())
                 }
             }
         }

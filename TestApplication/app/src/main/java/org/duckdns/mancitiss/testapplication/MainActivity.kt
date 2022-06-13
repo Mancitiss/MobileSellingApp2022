@@ -128,11 +128,11 @@ class MainActivity : AppCompatActivity() {
         arrNewestFood = ArrayList<Foods>()
         arrRecommendedFood = ArrayList<Foods>()
         newestFoodAdapter.setData(arrNewestFood)
-        rv_suggestfood.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        rv_suggestfood.adapter = newestFoodAdapter
-        recommendedFoodAdapter.setData(arrRecommendedFood)
         rv_newfood.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        rv_newfood.adapter = recommendedFoodAdapter
+        rv_newfood.adapter = newestFoodAdapter
+        recommendedFoodAdapter.setData(arrRecommendedFood)
+        rv_suggestfood.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        rv_suggestfood.adapter = recommendedFoodAdapter
         thread{
             load(arrNewestFood.size.toLong())
         }

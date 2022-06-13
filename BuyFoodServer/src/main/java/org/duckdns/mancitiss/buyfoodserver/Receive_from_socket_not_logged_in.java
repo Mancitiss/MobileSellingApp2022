@@ -626,6 +626,40 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                     }
                     break;
 
+                    case "7070":{
+                        String orderID = Tools.receive_ASCII_Automatically(DIS);
+                        // return order details
+                        try(PreparedStatement ps = ServerMain.sql.prepareStatement("SELECT * FROM ORDERS WHERE ID = ?")){
+                            ps.setString(1, orderID);
+                            try(ResultSet rs = ps.executeQuery();){
+                                if (rs.next()){
+                                    String name = rs.getNString("receiver");
+                                    String address = rs.getNString("address");
+                                    String phone = rs.getNString("contactNumber");
+                                    long total = rs.getLong("total");
+                                    List<ExistedItem> items = new ArrayList<>();
+                                    try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("SELECT * FROM ORDER_DETAILS WHERE orderID = ?")){
+                                        ps2.setString(1, orderID);
+                                        try(ResultSet rs2 = ps2.executeQuery();){
+                                            while (rs2.next()){
+                                                ExistedItem item = new ExistedItem(rs2.getString("productID"), rs2.getInt("count"), rs2.getNString("status"), rs2.getInt("rate"));
+                                                items.add(item);
+                                            }
+                                        }
+                                    }
+                                    ExistedOrder order = new ExistedOrder(orderID, name, phone, address, total, items);
+                                    String orderJSON = ServerMain.gson.toJson(order);
+                                    DOS.write(Tools.combine("7070".getBytes(StandardCharsets.UTF_16LE), Tools.data_with_unicode_byte(orderJSON).getBytes(StandardCharsets.UTF_16LE)));
+                                }
+                            }
+                        }
+                        catch (Exception e){
+                            ServerMain.handleException( e.toString());
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+
                     case "1901":{
                         String token = Tools.receive_ASCII(DIS, 32);
                         String orderID = Tools.receive_ASCII_Automatically(DIS);
@@ -668,12 +702,16 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                                             ps4.executeUpdate();
                                                         }
                                                         DOS.write("1901".getBytes(StandardCharsets.UTF_16LE));
+                                                        System.out.println("Rate succeed");
                                                     }
+                                                    System.out.println("out of details update");
                                                 }
                                             }
+                                            System.out.println("out of details");
                                         }
                                     }
                                 }
+                                System.out.println("out of order");
                             }
                         }
                     }
