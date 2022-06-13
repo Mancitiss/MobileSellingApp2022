@@ -39,14 +39,17 @@ class ViewProduct : AppCompatActivity() {
         textViewMFG.setText(sdf.format(date))
         textViewNumberOrder.setText("1")
 
+        iButtonBack.visibility = android.view.View.VISIBLE
         iButtonBack.setOnClickListener() {
             //startActivity(Intent(this, MainActivity::class.java))
             finish()
         }
 
         buttonPlus.setOnClickListener {
-            numberOrder += 1
-            textViewNumberOrder.setText(numberOrder.toString())
+            if (numberOrder < food.product.quantity) {
+                numberOrder += 1
+                textViewNumberOrder.setText(numberOrder.toString())
+            }
         }
 
         buttonMinus.setOnClickListener {
@@ -57,16 +60,21 @@ class ViewProduct : AppCompatActivity() {
         }
 
         buttonAddToCart.setOnClickListener {
-            //startActivity(Intent(this, CartActivity::class.java))
-            //finish()
-            // add key value of idfood and number order to cart
-            Models.getInstance().shoppingCart[idFood] = numberOrder
-            // inform user that product has been added to cart
-            Toast.makeText(this, "Đã thêm vào giỏ", Toast.LENGTH_SHORT).show()
-            // go back to main activity
-            //startActivity(Intent(this, MainActivity::class.java))
-            finish()
-
+            // check if quantity is > 0
+            if (food.product.quantity > 0) {
+                //startActivity(Intent(this, CartActivity::class.java))
+                //finish()
+                // add key value of idfood and number order to cart
+                Models.getInstance().shoppingCart[idFood] = numberOrder
+                // inform user that product has been added to cart
+                Toast.makeText(this, "Đã thêm vào giỏ", Toast.LENGTH_SHORT).show()
+                // go back to main activity
+                //startActivity(Intent(this, MainActivity::class.java))
+                finish()
+            }
+            else {
+                Toast.makeText(this, "Đã hết hàng", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

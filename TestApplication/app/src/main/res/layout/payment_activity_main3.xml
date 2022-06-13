@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:gravity="center"
-    tools:context=".MainActivity3">
+    tools:context=".PaymentMainActivity3">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -43,8 +43,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Visa Classic"
-            android:layout_marginLeft="55dp"
-            android:textSize="25dp"
+            android:layout_marginStart="55dp"
+            android:textSize="25sp"
             android:layout_marginTop="10dp"
             android:textStyle="bold"/>
 
@@ -52,20 +52,20 @@
             android:id="@+id/code"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="55dp"
+            android:layout_marginStart="55dp"
             android:layout_marginTop="100dp"
             android:text="@string/code"
-            android:textSize="18dp"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/cardholder"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="55dp"
+            android:layout_marginStart="55dp"
             android:layout_marginTop="155dp"
             android:text="CARDHOLDER"
-            android:textSize="18dp" />
+            android:textSize="18sp" />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -73,19 +73,19 @@
             android:layout_toEndOf="@id/cardholder"
             android:orientation="vertical"
             android:id="@+id/layout1"
-            android:layout_marginLeft="10dp"
+            android:layout_marginStart="10dp"
             android:layout_below="@id/code">
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="12"
                 android:id="@+id/month"
-                android:textSize="15dp"/>
+                android:textSize="15sp"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="MM"
-                android:textSize="15dp"/>
+                android:textSize="15sp"/>
         </LinearLayout>
 
         <TextView
@@ -101,26 +101,26 @@
             android:layout_toEndOf="@+id/layout1"
             android:id="@+id/layout2"
             android:orientation="vertical"
-            android:layout_marginLeft="10dp"
+            android:layout_marginStart="10dp"
             android:layout_below="@id/code">
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="25"
                 android:id="@+id/year"
-                android:textSize="15dp"/>
+                android:textSize="15sp"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="YY"
-                android:textSize="15dp"/>
+                android:textSize="15sp"/>
         </LinearLayout>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/code"
-            android:layout_marginLeft="20dp"
+            android:layout_marginStart="20dp"
             android:layout_toEndOf="@id/layout2"
             android:text="CCV"
             android:id="@+id/ccv"/>
@@ -140,46 +140,58 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:layout_marginLeft="20dp"
+        android:layout_marginStart="20dp"
         android:textColor="@color/maincolor"
-        android:text="ENTER 16-DIGIT NUMBER"/>
+        android:text="MÃ SỐ THẺ (16 CHỮ SỐ)"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginLeft="20dp">
+        android:layout_marginStart="20dp">
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/code1"
             android:inputType="number"
             android:maxLength="4"
-            android:hint="XXXX"/>
+            android:hint="XXXX"
+            android:nextFocusForward="@+id/code2"
+            android:nextFocusDown="@+id/code2"
+            />
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/code2"
             android:inputType="number"
             android:maxLength="4"
-            android:layout_marginLeft="10dp"
-            android:hint="XXXX"/>
+            android:layout_marginStart="10dp"
+            android:hint="XXXX"
+            android:nextFocusForward="@+id/code3"
+            android:nextFocusDown="@+id/code3"
+            />
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/code3"
             android:inputType="number"
             android:maxLength="4"
-            android:layout_marginLeft="10dp"
-            android:hint="XXXX"/>
+            android:layout_marginStart="10dp"
+            android:hint="XXXX"
+            android:nextFocusForward="@+id/code4"
+            android:nextFocusDown="@+id/code4"
+            />
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/code4"
             android:inputType="number"
             android:maxLength="4"
-            android:layout_marginLeft="10dp"
-            android:hint="XXXX"/>
+            android:layout_marginStart="10dp"
+            android:hint="XXXX"
+            android:nextFocusForward="@+id/Name"
+            android:nextFocusDown="@+id/Name"
+            />
 
     </LinearLayout>
 
@@ -187,48 +199,57 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:layout_marginLeft="20dp"
+        android:layout_marginStart="20dp"
         android:textColor="@color/maincolor"
-        android:text="CARDHOLDER NAME"/>
+        android:text="HỌ VÀ TÊN CHỦ THẺ"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="20dp">
+        android:layout_marginStart="20dp">
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:inputType="text"
             android:id="@+id/Name"
-            android:hint="Holdername"/>
+            android:hint="NGUYỄN VĂN A"
+            android:nextFocusForward="@+id/Month"
+            android:nextFocusDown="@+id/Month"
+            />
     </LinearLayout>
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:layout_marginLeft="20dp"
+        android:layout_marginStart="20dp"
         android:textColor="@color/maincolor"
-        android:text="EXPIRY"/>
+        android:text="HẠN THẺ"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="20dp">
+        android:layout_marginStart="20dp">
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:inputType="text"
             android:id="@+id/Month"
             android:maxLength="2"
-            android:hint="MM"/>
+            android:hint="MM"
+            android:nextFocusForward="@+id/Year"
+            android:nextFocusDown="@+id/Year"
+            />
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:inputType="text"
             android:id="@+id/Year"
             android:maxLength="2"
-            android:layout_marginLeft="10dp"
-            android:hint="YY"/>
+            android:layout_marginStart="10dp"
+            android:hint="YY"
+            android:nextFocusForward="@+id/CCV"
+            android:nextFocusDown="@+id/CCV"
+            />
     </LinearLayout>
 
 
@@ -236,27 +257,30 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginLeft="20dp"
+        android:layout_marginStart="20dp"
         android:layout_marginTop="10dp">
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/maincolor"
-            android:text="ENTER CCV"/>
+            android:text="MẬT MÃ THẺ"/>
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="20dp"
+            android:layout_marginStart="20dp"
             android:inputType="text"
             android:id="@+id/CCV"
             android:maxLength="3"
-            android:hint="XXX"/>
+            android:hint="XXX"
+            android:nextFocusForward="@+id/payment_visa"
+            android:nextFocusDown="@+id/payment_visa"
+            />
     </LinearLayout>
 
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="90dp"
         android:orientation="horizontal"
         android:layout_marginTop="10dp"
         android:gravity = "center">
@@ -264,13 +288,14 @@
             android:layout_width="200dp"
             android:layout_height="70dp"
             android:id="@+id/payment_visa"
-            android:text="Payment"
+            android:text="Thanh toán"
             android:textColor="@color/maincolor"
             android:textSize="18dp"
             android:gravity="center"
             android:background="@drawable/bg_btn"
             android:padding="20dp"
-            android:drawableLeft="@drawable/ic_edit"/>
+            android:drawableLeft="@drawable/ic_edit"
+            />
 
     </LinearLayout>
 

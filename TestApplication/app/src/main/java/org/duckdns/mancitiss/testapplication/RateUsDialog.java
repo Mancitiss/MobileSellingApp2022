@@ -8,16 +8,32 @@ import android.view.animation.Animation;
 import android.view.animation.ScaleAnimation;
 import android.widget.ImageView;
 import android.widget.RatingBar;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
+
+import java.util.Objects;
 
 public class RateUsDialog extends Dialog {
 
     private float UserRate = 0;
+    private String orderId;
+    private String foodId;
+    private Context context;
+    private AppCompatActivity activity;
+    TextView foodName;
 
+    public RateUsDialog(@NonNull Context context, @NonNull AppCompatActivity activity, @NonNull String orderId, @NonNull String foodId) {
+        this(context);
+        this.context = context;
+        this.activity = activity;
+        this.orderId = orderId;
+        this.foodId = foodId;
+    }
 
-    public RateUsDialog(@NonNull Context context) {
+    private RateUsDialog(@NonNull Context context) {
         super(context);
     }
 
@@ -27,7 +43,8 @@ public class RateUsDialog extends Dialog {
 
         setContentView(R.layout.rate_us_dialog_layout);
 
-
+        foodName = findViewById(R.id.rateFoodName);
+        foodName.setText(Objects.requireNonNull(Models.getInstance().getKnownProducts().get(foodId)).getName());
         final AppCompatButton RateBtn = findViewById(R.id.RateNow_btn);
         final  AppCompatButton LaterBtn = findViewById(R.id.Later_btn);
         final RatingBar RatingBar = findViewById(R.id.Rating_bar);
@@ -35,7 +52,21 @@ public class RateUsDialog extends Dialog {
         RateBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                if (UserRate == 0){
+                    // do nothing
+                }
+                else {
+                    // send rate to server
+                    // dismiss dialog
+                    Thread thread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {;
+                            Connection.Companion.sendRate(activity, context, orderId, foodId, (int) Math.ceil(UserRate));
+                        }
+                    });
+                    thread.start();
+                    dismiss();
+                }
             }
         });
 

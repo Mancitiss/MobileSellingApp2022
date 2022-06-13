@@ -59,13 +59,24 @@ public class ReceiptActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            adapter = new DonHangAdapter(donHangList, ReceiptActivity.this);
+                            adapter = new DonHangAdapter(donHangList, ReceiptActivity.this, ReceiptActivity.this);
                             recyclerView.setAdapter(adapter);
                         }
                     });
                 }
                 else {
-
+                    Connection.Companion.getCachedOrders(ReceiptActivity.this, ReceiptActivity.this);
+                    for(String key : Models.getInstance().getKnownOrders().keySet()){
+                        DonHang donHang = Models.getInstance().getKnownOrders().get(key);
+                        donHangList.add(donHang);
+                    }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            adapter = new DonHangAdapter(donHangList, ReceiptActivity.this, ReceiptActivity.this);
+                            recyclerView.setAdapter(adapter);
+                        }
+                    });
                 }
             }
         });

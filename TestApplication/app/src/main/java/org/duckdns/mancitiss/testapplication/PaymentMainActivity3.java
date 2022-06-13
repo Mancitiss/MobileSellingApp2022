@@ -66,6 +66,7 @@ public class PaymentMainActivity3 extends AppCompatActivity {
                 c3 = e3.getText().toString();
                 c4 = e4.getText().toString();
                 t1.setText(c1 + " \t " + c2 + " \t " + c3 + " \t " + c4);
+                String code = c1 + c2 + c3 + c4;
                 String name1, month1, year1, ccv1;
                 name1 = e5.getText().toString();
                 t2.setText(name1);
@@ -75,9 +76,50 @@ public class PaymentMainActivity3 extends AppCompatActivity {
                 t4.setText(year1);
                 ccv1 = e8.getText().toString();
                 t5.setText(ccv1);
+                String cvv = ccv1;
+
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (Connection.Companion.CheckVisa(PaymentMainActivity3.this, PaymentMainActivity3.this, code, cvv)){
+                            if(Connection.Companion.PlaceOrderWithoutAccount(PaymentMainActivity3.this, PaymentMainActivity3.this)){
+                                Intent intent = new Intent(PaymentMainActivity3.this, MainActivity.class);
+                                // clear all activities in stack
+                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                startActivity(intent);
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(PaymentMainActivity3.this, "Order placed", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                            }
+                            else {
+                                // show cart activity
+                                Intent intent = new Intent(PaymentMainActivity3.this, CartActivity.class);
+                                // clear all activities in stack
+                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                startActivity(intent);
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(PaymentMainActivity3.this, "Order failed", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                            }
+                        }
+                        else {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(PaymentMainActivity3.this, "Invalid card", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+                    }
+                });
+                thread.start();
             }
         });
-
-
     }
 }

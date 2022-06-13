@@ -157,10 +157,10 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                             try(PreparedStatement ps = ServerMain.sql.prepareStatement("SELECT * FROM PRODUCTS")){
                                 try(ResultSet rs = ps.executeQuery();){
                                     while (rs.next()){
-                                        String ID = rs.getString("ID");
-                                        String filename = ID + "_1.jpg";
-                                        //String filepath = ServerMain.img_path + filename;
-                                        System.out.println("Reading file: " + filename);
+                                        ////String ID = rs.getString("ID");
+                                        //String filename = ID + "_1.jpg";
+                                        ////String filepath = ServerMain.img_path + filename;
+                                        ////System.out.println("Reading file: " + filename);
                                         //File file = new File(filepath);
 
                                         // new file handling method
@@ -429,9 +429,10 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                         TimerTask timerTask = new TimerTask(){
                                             @Override
                                             public void run(){
-                                                try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("UPDATE ORDER_DETAILS SET status = ? WHERE orderID = ?")){
+                                                try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("UPDATE ORDER_DETAILS SET status = ? WHERE orderID = ? AND status != ?")){
                                                     ps2.setString(1, "Delivered");
                                                     ps2.setString(2, newID);
+                                                    ps2.setString(3, "Cancelled");
                                                     ps2.executeUpdate();
                                                 }
                                                 catch(Exception e){
@@ -517,11 +518,18 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                                 if (rs2.next()){
                                                     if (username.equals(rs2.getNString("username")) || rs2.getNString("username") == null){
                                                         // update order status to Cancelled
-                                                        try(PreparedStatement ps3 = ServerMain.sql.prepareStatement("UPDATE ORDERS SET status = ? WHERE ID = ?")){
+                                                        try(PreparedStatement ps3 = ServerMain.sql.prepareStatement("UPDATE TOP 1 ORDERS SET status = ? WHERE ID = ?")){
                                                             ps3.setString(1, "Cancelled");
                                                             ps3.setString(2, orderID);
                                                             if (ps3.executeUpdate() > 0){
-                                                                DOS.write("2613".getBytes(StandardCharsets.UTF_16LE));
+                                                                // update order details status to Cancelled
+                                                                try(PreparedStatement ps4 = ServerMain.sql.prepareStatement("UPDATE ORDER_DETAILS SET status = ? WHERE orderID = ?")){
+                                                                    ps4.setString(1, "Cancelled");
+                                                                    ps4.setString(2, orderID);
+                                                                    if (ps4.executeUpdate() > 0){
+                                                                        DOS.write("2613".getBytes(StandardCharsets.UTF_16LE));
+                                                                    }
+                                                                }
                                                             }
                                                         }
                                                     }
@@ -569,6 +577,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                     }
                     break;
 
+                    // history / notifications // ... // get all orders for a user
                     case "6969":{
                         String token = Tools.receive_ASCII(DIS, 32);
                         // check if token is valid
@@ -594,7 +603,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                                     ps3.setString(1, orderID);
                                                     try(ResultSet rs3 = ps3.executeQuery();){
                                                         while (rs3.next()){
-                                                            ExistedItem item = new ExistedItem(rs3.getString("productID"), rs3.getInt("count"), rs3.getNString("status"));
+                                                            ExistedItem item = new ExistedItem(rs3.getString("productID"), rs3.getInt("count"), rs3.getNString("status"), rs3.getInt("rate"));
                                                             items.add(item);
                                                         }
                                                     }
@@ -613,6 +622,97 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                         catch (Exception e){
                             ServerMain.handleException( e.toString());
                             e.printStackTrace();
+                        }
+                    }
+                    break;
+
+                    case "7070":{
+                        String orderID = Tools.receive_ASCII_Automatically(DIS);
+                        // return order details
+                        try(PreparedStatement ps = ServerMain.sql.prepareStatement("SELECT * FROM ORDERS WHERE ID = ?")){
+                            ps.setString(1, orderID);
+                            try(ResultSet rs = ps.executeQuery();){
+                                if (rs.next()){
+                                    String name = rs.getNString("receiver");
+                                    String address = rs.getNString("address");
+                                    String phone = rs.getNString("contactNumber");
+                                    long total = rs.getLong("total");
+                                    List<ExistedItem> items = new ArrayList<>();
+                                    try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("SELECT * FROM ORDER_DETAILS WHERE orderID = ?")){
+                                        ps2.setString(1, orderID);
+                                        try(ResultSet rs2 = ps2.executeQuery();){
+                                            while (rs2.next()){
+                                                ExistedItem item = new ExistedItem(rs2.getString("productID"), rs2.getInt("count"), rs2.getNString("status"), rs2.getInt("rate"));
+                                                items.add(item);
+                                            }
+                                        }
+                                    }
+                                    ExistedOrder order = new ExistedOrder(orderID, name, phone, address, total, items);
+                                    String orderJSON = ServerMain.gson.toJson(order);
+                                    DOS.write(Tools.combine("7070".getBytes(StandardCharsets.UTF_16LE), Tools.data_with_unicode_byte(orderJSON).getBytes(StandardCharsets.UTF_16LE)));
+                                }
+                            }
+                        }
+                        catch (Exception e){
+                            ServerMain.handleException( e.toString());
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+
+                    case "1901":{
+                        String token = Tools.receive_ASCII(DIS, 32);
+                        String orderID = Tools.receive_ASCII_Automatically(DIS);
+                        String productID = Tools.receive_ASCII_Automatically(DIS);
+                        int rate = Integer.parseInt(Tools.receive_ASCII_Automatically(DIS));
+                        // get username from token
+                        String username = "";
+                        try(PreparedStatement ps = ServerMain.sql.prepareStatement("SELECT TOP 1 * FROM TOKENS WHERE token = ?")){
+                            ps.setString(1, token);
+                            try(ResultSet rs = ps.executeQuery();){
+                                if (rs.next()){
+                                    username = rs.getNString("username");
+                                }
+                            }
+                        }
+                        // select order with orderID and username
+                        try(PreparedStatement ps = ServerMain.sql.prepareStatement("SELECT * FROM ORDERS WHERE ID = ? AND username = ?")){
+                            ps.setString(1, orderID);
+                            ps.setString(2, username);
+                            try(ResultSet rs = ps.executeQuery();){
+                                if (rs.next()){
+                                    // order found
+                                    // select order details with orderID and productID
+                                    try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("SELECT * FROM ORDER_DETAILS WHERE orderID = ? AND productID = ?")){
+                                        ps2.setString(1, orderID);
+                                        ps2.setString(2, productID);
+                                        try(ResultSet rs2 = ps2.executeQuery();){
+                                            if (rs2.next()){
+                                                // order details found
+                                                // update order details
+                                                try(PreparedStatement ps3 = ServerMain.sql.prepareStatement("UPDATE ORDER_DETAILS SET rate = ? WHERE orderID = ? AND productID = ?")){
+                                                    ps3.setInt(1, rate);
+                                                    ps3.setString(2, orderID);
+                                                    ps3.setString(3, productID);
+                                                    if (ps3.executeUpdate() > 0){
+                                                        // send success message to client
+                                                        try(PreparedStatement ps4 = ServerMain.sql.prepareStatement("UPDATE PRODUCTS SET stars = stars + ?, ratingCount = ratingCount + 1 WHERE ID = ?")){
+                                                            ps4.setInt(1, rate);
+                                                            ps4.setString(2, productID);
+                                                            ps4.executeUpdate();
+                                                        }
+                                                        DOS.write("1901".getBytes(StandardCharsets.UTF_16LE));
+                                                        System.out.println("Rate succeed");
+                                                    }
+                                                    System.out.println("out of details update");
+                                                }
+                                            }
+                                            System.out.println("out of details");
+                                        }
+                                    }
+                                }
+                                System.out.println("out of order");
+                            }
                         }
                     }
                     break;

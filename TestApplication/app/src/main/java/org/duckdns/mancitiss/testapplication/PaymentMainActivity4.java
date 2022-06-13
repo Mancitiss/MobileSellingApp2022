@@ -13,8 +13,11 @@ public class PaymentMainActivity4 extends AppCompatActivity {
         setContentView(R.layout.payment_activity_main4);
 
         //show rating dialog
+        /*
         RateUsDialog rateUsDialog = new RateUsDialog(PaymentMainActivity4.this);
         rateUsDialog.setCancelable(false);
         rateUsDialog.show();
+
+         */
     }
 }
