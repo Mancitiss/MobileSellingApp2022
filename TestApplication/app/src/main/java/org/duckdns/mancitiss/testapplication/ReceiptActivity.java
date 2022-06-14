@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import androidx.appcompat.widget.Toolbar;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,6 +49,10 @@ public class ReceiptActivity extends AppCompatActivity {
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        refresh();
+    }
+
+    private void refresh(){
         donHangList = new ArrayList<DonHang>();
         Thread thread = new Thread(new Runnable() {
             @Override

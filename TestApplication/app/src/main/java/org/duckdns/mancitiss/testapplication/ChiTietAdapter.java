@@ -18,7 +18,7 @@ public class ChiTietAdapter extends RecyclerView.Adapter<ChiTietAdapter.MyViewHo
     AppCompatActivity activity;
     List<Item> itemList;
     String orderID;
-    private Object Glide;
+    //private Object Glide;
 
     public ChiTietAdapter(Context context, AppCompatActivity activity, String orderID, List<Item> itemList) {
         this.context = context;
@@ -41,7 +41,7 @@ public class ChiTietAdapter extends RecyclerView.Adapter<ChiTietAdapter.MyViewHo
         holder.txtten.setText(item.getTensp() + "");
         holder.txtsoluong.setText("Số lượng: "+item.getSoluong());
         holder.txtgiatien.setText("Giá tiền: "+item.getGia());
-        holder.txttinhtrang.setText("Tình trạng: "+item.getTinhtrang());
+        holder.txttong.setText("Tổng cộng: "+ (item.getGia() * item.getSoluong()) + " đ");
         //Load hình ảnh.
         if (item.getHinhanh() != null) {
             holder.imagechitiet.setImageBitmap(item.getHinhanh());
@@ -70,14 +70,14 @@ public class ChiTietAdapter extends RecyclerView.Adapter<ChiTietAdapter.MyViewHo
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
         ImageView imagechitiet;
-        TextView txtten,txtsoluong,txtgiatien,txttinhtrang;
+        TextView txtten,txtsoluong,txtgiatien,txttong;
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
             imagechitiet = itemView.findViewById(R.id.item_imageviewchitiet);
             txtten = itemView.findViewById(R.id.item_tensanpham);
             txtsoluong = itemView.findViewById(R.id.item_soluong);
             txtgiatien = itemView.findViewById(R.id.item_giatien);
-            txttinhtrang = itemView.findViewById(R.id.item_tinhtrang);
+            txttong = itemView.findViewById(R.id.item_tong);
         }
     }
 }

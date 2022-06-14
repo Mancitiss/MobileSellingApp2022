@@ -51,10 +51,10 @@
                     android:textSize="15sp" />
 
                 <TextView
-                    android:id="@+id/item_tinhtrang"
+                    android:id="@+id/item_tong"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Tình trạng:"
+                    android:text="Tổng:"
                     android:textSize="15sp" />
             </LinearLayout>
         </RelativeLayout>

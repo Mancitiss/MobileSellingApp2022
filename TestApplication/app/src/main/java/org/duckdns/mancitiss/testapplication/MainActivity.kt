@@ -15,6 +15,7 @@ import androidx.core.view.GravityCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.android.synthetic.main.activity_main.*
 import org.duckdns.mancitiss.testapplication.adapter.CategoryAdapter
 import org.duckdns.mancitiss.testapplication.adapter.FoodAdapter
@@ -58,6 +59,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         val model = Models.getInstance()
         newestFoodAdapter.mContext = this
         recommendedFoodAdapter.mContext = this
@@ -120,6 +122,12 @@ class MainActivity : AppCompatActivity() {
         menuGoToAccount.setOnClickListener{
             goTo(it)
         }
+        val swipeRefreshLayout = findViewById<SwipeRefreshLayout>(R.id.swipeRefreshLayout)
+        swipeRefreshLayout.setOnRefreshListener {
+            reload()
+            swipeRefreshLayout.isRefreshing = false
+        }
+
         reload()
     }
 
