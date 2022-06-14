@@ -13,6 +13,8 @@ public class PaymentMainActivity extends AppCompatActivity {
     TextView textView;
     TextView textView1;
     ImageView imageViewBack;
+
+    boolean clicked = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,23 +34,44 @@ public class PaymentMainActivity extends AppCompatActivity {
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (clicked) return;
+                clicked = true;
                 Thread thread = new Thread(new Runnable(){
                     @Override
                     public void run() {
                         if (Connection.Companion.isLoggedIn(PaymentMainActivity.this, PaymentMainActivity.this)) {
                             //Toast.makeText(PaymentMainActivity.this, "Đã chọn thanh toán bằng tiền mặt", Toast.LENGTH_SHORT).show();
                             if (Connection.Companion.PlaceOrderWithAccount(PaymentMainActivity.this, PaymentMainActivity.this)) {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(PaymentMainActivity.this, "Đặt hàng thành công", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                                 //Toast.makeText(PaymentMainActivity.this, "Đặt hàng thành công", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(PaymentMainActivity.this, MainActivity.class);
                                 startActivity(intent);
                                 finish();
                             } else {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(PaymentMainActivity.this, "Đặt hàng thất bại", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                                 //Toast.makeText(PaymentMainActivity.this, "Đặt hàng thất bại", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(PaymentMainActivity.this, CartActivity.class);
                                 startActivity(intent);
                                 finish();
                             }
                         } else {
+                            boolean clicked = false;
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(PaymentMainActivity.this, "Bạn chưa đăng nhập", Toast.LENGTH_SHORT).show();
+                                }
+                            });
                             //Toast.makeText(PaymentMainActivity.this, "Bạn cần phải đăng nhập", Toast.LENGTH_SHORT).show();
                         }
                     }
@@ -66,9 +89,5 @@ public class PaymentMainActivity extends AppCompatActivity {
                 Toast.makeText(PaymentMainActivity.this, "Đã chọn thanh toán online qua VISA", Toast.LENGTH_SHORT).show();
             }
         });
-
-
-
-
     }
 }

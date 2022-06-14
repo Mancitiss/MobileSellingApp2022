@@ -12,6 +12,8 @@ public class DonHang {
     public long total;
     public Item[] itemList;
 
+    long mDate;
+
     public DonHang(){}
 
     public DonHang(String id, String address, String phone, String name, long total, Item[] itemList) {

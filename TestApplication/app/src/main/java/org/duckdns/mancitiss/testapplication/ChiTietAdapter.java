@@ -53,9 +53,12 @@ public class ChiTietAdapter extends RecyclerView.Adapter<ChiTietAdapter.MyViewHo
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RateUsDialog rateUsDialog = new RateUsDialog(context, activity, orderID, item.idsp);
-                rateUsDialog.setCancelable(false);
-                rateUsDialog.show();
+                // rate only when user didn't rate this item
+                if (item.rate == 0) {
+                    RateUsDialog rateUsDialog = new RateUsDialog(context, activity, orderID, item.idsp, item);
+                    rateUsDialog.setCancelable(false);
+                    rateUsDialog.show();
+                }
             }
         });
     }

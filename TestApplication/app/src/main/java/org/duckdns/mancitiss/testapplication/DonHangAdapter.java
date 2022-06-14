@@ -81,6 +81,7 @@ public class DonHangAdapter extends RecyclerView.Adapter<DonHangAdapter.MyViewHo
                         });
                     }
                 });
+                thread.start();
             }
         });
     }

@@ -10,15 +10,18 @@ public class ExistedOrder {
     public long total;
     public List<ExistedItem> itemList;
 
+    public long mDate;
+
     public ExistedOrder() {
     }
 
-    public ExistedOrder(String id, String name, String phoneNumber, String address, long total, List<ExistedItem> items) {
+    public ExistedOrder(String id, String name, String phoneNumber, String address, long total, List<ExistedItem> items, long mDate) {
         this.id = id;
         this.name = name;
         this.phone = phoneNumber;
         this.address = address;
         this.total = total;
         this.itemList = items;
+        this.mDate = mDate;
     }
 }

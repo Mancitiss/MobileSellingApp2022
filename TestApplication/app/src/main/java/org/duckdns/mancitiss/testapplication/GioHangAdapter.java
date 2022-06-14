@@ -92,6 +92,7 @@ public class GioHangAdapter extends RecyclerView.Adapter<GioHangAdapter.MyViewHo
             @Override
             public void onClick(View v) {
                 Long soluong = Long.parseLong(holder.item_giohang_soluong.getText().toString());
+                if (soluong >= Models.getInstance().getKnownProducts().get(gioHang.idsp).getQuantity()) return;
                 soluong++;
                 holder.item_giohang_soluong.setText(soluong.toString());
                 holder.item_giohang_giasp2.setText((soluong*gioHang.giasp) + " đ");

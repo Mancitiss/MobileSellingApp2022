@@ -21,16 +21,18 @@ public class RateUsDialog extends Dialog {
     private float UserRate = 0;
     private String orderId;
     private String foodId;
+    private Item item;
     private Context context;
     private AppCompatActivity activity;
     TextView foodName;
 
-    public RateUsDialog(@NonNull Context context, @NonNull AppCompatActivity activity, @NonNull String orderId, @NonNull String foodId) {
+    public RateUsDialog(@NonNull Context context, @NonNull AppCompatActivity activity, @NonNull String orderId, @NonNull String foodId, @NonNull Item item) {
         this(context);
         this.context = context;
         this.activity = activity;
         this.orderId = orderId;
         this.foodId = foodId;
+        this.item = item;
     }
 
     private RateUsDialog(@NonNull Context context) {
@@ -60,8 +62,11 @@ public class RateUsDialog extends Dialog {
                     // dismiss dialog
                     Thread thread = new Thread(new Runnable() {
                         @Override
-                        public void run() {;
-                            Connection.Companion.sendRate(activity, context, orderId, foodId, (int) Math.ceil(UserRate));
+                        public void run() {
+                            int userRate = (int) Math.ceil(UserRate);
+                            if(Connection.Companion.sendRate(activity, context, orderId, foodId, userRate)){
+                                item.rate = userRate;
+                            }
                         }
                     });
                     thread.start();
@@ -81,8 +86,6 @@ public class RateUsDialog extends Dialog {
         RatingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
             @Override
             public void onRatingChanged(RatingBar ratingBar, float v, boolean b) {
-
-
                 if(v <= 1)
                 {
                     RatingImage.setImageResource(R.drawable.one_start);
@@ -113,14 +116,13 @@ public class RateUsDialog extends Dialog {
                                 }
                                 //animate emoji image
                                 AnimateImage(RatingImage);
-                                //select rating by user
-                                UserRate = v;
 
                             }
                         }
                     }
                 }
-
+                //select rating by user
+                UserRate = v;
             }
         });
     }

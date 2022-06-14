@@ -19,6 +19,7 @@ public class PaymentMainActivity3 extends AppCompatActivity {
     EditText e1, e2, e3, e4, e5, e6, e7, e8;
     TextView t1, t2, t3, t4, t5, btn;
 
+    boolean clicked = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +55,8 @@ public class PaymentMainActivity3 extends AppCompatActivity {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                if (clicked) return;
+                clicked = true;
                 Animation animation = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.push_down);
                 LinearLayout linearLayout = (LinearLayout) findViewById(R.id.rl1);
                 linearLayout.setAnimation(animation);
@@ -109,6 +111,7 @@ public class PaymentMainActivity3 extends AppCompatActivity {
                             }
                         }
                         else {
+                            clicked = false;
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {

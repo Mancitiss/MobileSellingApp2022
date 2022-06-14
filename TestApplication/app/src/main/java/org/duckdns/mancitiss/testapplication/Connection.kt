@@ -475,16 +475,18 @@ class Connection{
                     when(val instruction = Tools.receive_unicode(DIS, 8)){
                         "2611"->{
                             Log.d("connecting", "order placed")
-
+/*
                             val id = Tools.receiveASCII(DIS, 21)
-                            val total = Tools.receive_ASCII_Automatically(DIS).toLong()
                             Log.d("connecting", "order placed" + id)
+                            val total = Tools.receive_ASCII_Automatically(DIS).toLong()
                             val itemList = ArrayList<Item>()
                             for(i in Models.getInstance().shoppingCart){
                                 itemList.add(Item(i.key, i.value, "Đang chờ xử lý"))
                             }
                             val donHang = DonHang(id, order.address, order.phoneNumber, order.name, total, itemList.toArray(arrayOf<Item>()))
                             Models.getInstance().knownOrders[id] = donHang
+*/
+
                             return true
                         }
                         else -> {
@@ -520,7 +522,7 @@ class Connection{
                         val orderList = Gson().fromJson(json, Array<DonHang>::class.java)
                         for (i in orderList) {
                             Models.getInstance().knownOrders[i.id] = i
-                            Log.d("connecting", i.getItemList().get(0).idsp)
+                            Log.d("connecting", i.mDate.toString())
                         }
                     }
                     else -> {

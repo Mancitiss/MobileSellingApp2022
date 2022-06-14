@@ -10,6 +10,8 @@ import android.widget.Button;
 import androidx.appcompat.widget.Toolbar;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class ReceiptActivity extends AppCompatActivity {
@@ -56,6 +58,22 @@ public class ReceiptActivity extends AppCompatActivity {
                         DonHang donHang = Models.getInstance().getKnownOrders().get(key);
                         donHangList.add(donHang);
                     }
+                    // quick sort donHangList by mDate
+                    Collections.sort(donHangList, new Comparator<DonHang>() {
+                        @Override
+                        public int compare(DonHang o1, DonHang o2) {
+                            // compare 2 mDate (long)
+                            if (o2.mDate - o1.mDate > 0){
+                                return 1;
+                            }
+                            else if (o2.mDate - o1.mDate < 0){
+                                return -1;
+                            }
+                            else {
+                                return 0;
+                            }
+                        }
+                    });
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {

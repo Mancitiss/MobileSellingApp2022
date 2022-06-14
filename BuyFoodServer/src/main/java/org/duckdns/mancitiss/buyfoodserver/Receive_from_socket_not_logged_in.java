@@ -279,8 +279,8 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                 // insert the order into database
                                 try(PreparedStatement ps = ServerMain.sql.prepareStatement("INSERT INTO ORDERS (ID, username, length, total, status, address, receiver, contactNumber) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")){
                                     // create new random long and convert it to string with "OR" at the beginning
-                                    String newIdnum = ""+ServerMain.rand.nextLong();
-                                    while (newIdnum.length() < 19) newIdnum = "0" + newIdnum;
+                                    String newIdnum = ""+Math.abs(ServerMain.rand.nextLong());
+                                    while (newIdnum.length() < 20) newIdnum = "0" + newIdnum;
                                     String newId = "OR" + newIdnum;
                                     // check if newID exists in database
                                     while (true){
@@ -292,8 +292,8 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                                 }
                                             }
                                         }
-                                        newIdnum = ""+ServerMain.rand.nextLong();
-                                        while (newIdnum.length() < 19) newIdnum = "0" + newIdnum;
+                                        newIdnum = ""+Math.abs(ServerMain.rand.nextLong());
+                                        while (newIdnum.length() < 20) newIdnum = "0" + newIdnum;
                                         newId = "OR" + newIdnum;
                                     }
                                     final String newID = newId;
@@ -518,7 +518,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                                 if (rs2.next()){
                                                     if (username.equals(rs2.getNString("username")) || rs2.getNString("username") == null){
                                                         // update order status to Cancelled
-                                                        try(PreparedStatement ps3 = ServerMain.sql.prepareStatement("UPDATE TOP 1 ORDERS SET status = ? WHERE ID = ?")){
+                                                        try(PreparedStatement ps3 = ServerMain.sql.prepareStatement("UPDATE TOP (1) ORDERS SET status = ? WHERE ID = ?")){
                                                             ps3.setString(1, "Cancelled");
                                                             ps3.setString(2, orderID);
                                                             if (ps3.executeUpdate() > 0){
@@ -589,7 +589,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                     String username = rs.getNString("username");
                                     // get all orders for user
                                     List<ExistedOrder> orders = new ArrayList<>();
-                                    try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("SELECT * FROM ORDERS WHERE username = ?")){
+                                    try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("SELECT * FROM ORDERS WHERE username = ? ORDER BY [date] DESC")){
                                         ps2.setString(1, username);
                                         try(ResultSet rs2 = ps2.executeQuery();){
                                             while (rs2.next()){
@@ -598,6 +598,8 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                                 String address = rs2.getNString("address");
                                                 String phone = rs2.getNString("contactNumber");
                                                 long total = rs2.getLong("total");
+                                                long mDate = rs2.getTimestamp("date").getTime();
+                                                System.out.println(mDate);
                                                 List<ExistedItem> items = new ArrayList<>();
                                                 try(PreparedStatement ps3 = ServerMain.sql.prepareStatement("SELECT * FROM ORDER_DETAILS WHERE orderID = ?")){
                                                     ps3.setString(1, orderID);
@@ -608,7 +610,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                                         }
                                                     }
                                                 }
-                                                ExistedOrder order = new ExistedOrder(orderID, name, phone, address, total, items);
+                                                ExistedOrder order = new ExistedOrder(orderID, name, phone, address, total, items, mDate);
                                                 orders.add(order);
                                             }
                                         }
@@ -626,6 +628,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                     }
                     break;
 
+                    // gfet order details of orderID
                     case "7070":{
                         String orderID = Tools.receive_ASCII_Automatically(DIS);
                         // return order details
@@ -637,6 +640,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                     String address = rs.getNString("address");
                                     String phone = rs.getNString("contactNumber");
                                     long total = rs.getLong("total");
+                                    long mDate = rs.getDate("date").getTime();
                                     List<ExistedItem> items = new ArrayList<>();
                                     try(PreparedStatement ps2 = ServerMain.sql.prepareStatement("SELECT * FROM ORDER_DETAILS WHERE orderID = ?")){
                                         ps2.setString(1, orderID);
@@ -647,7 +651,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                                             }
                                         }
                                     }
-                                    ExistedOrder order = new ExistedOrder(orderID, name, phone, address, total, items);
+                                    ExistedOrder order = new ExistedOrder(orderID, name, phone, address, total, items, mDate);
                                     String orderJSON = ServerMain.gson.toJson(order);
                                     DOS.write(Tools.combine("7070".getBytes(StandardCharsets.UTF_16LE), Tools.data_with_unicode_byte(orderJSON).getBytes(StandardCharsets.UTF_16LE)));
                                 }
@@ -660,6 +664,7 @@ public class Receive_from_socket_not_logged_in implements Runnable {
                     }
                     break;
 
+                    // rating
                     case "1901":{
                         String token = Tools.receive_ASCII(DIS, 32);
                         String orderID = Tools.receive_ASCII_Automatically(DIS);
